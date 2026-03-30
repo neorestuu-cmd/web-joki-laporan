@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>YUDHASLLOTSS PRO</title>
+
+<style>
+body {
+  font-family: Arial;
+  text-align: center;
+  background: radial-gradient(circle, #000428, #004e92);
+  color: white;
+}
+
+h1 {
+  color: gold;
+  text-shadow: 0 0 15px gold;
+}
+
+input {
+  padding: 10px;
+  border-radius: 10px;
+  border: none;
+}
+
+.slot {
+  font-size: 70px;
+  margin: 30px;
+  letter-spacing: 15px;
+  animation: glow 1s infinite alternate;
+}
+
+@keyframes glow {
+  from { text-shadow: 0 0 10px white; }
+  to { text-shadow: 0 0 25px gold; }
+}
+
+button {
+  padding: 15px 25px;
+  margin: 10px;
+  border: none;
+  border-radius: 10px;
+  background: gold;
+  font-size: 18px;
+  cursor: pointer;
+  box-shadow: 0 0 10px gold;
+}
+
+button:hover {
+  background: orange;
+}
+
+.info {
+  font-size: 20px;
+  margin-top: 10px;
+}
+
+#result {
+  margin-top: 15px;
+  font-size: 20px;
+}
+</style>
+</head>
+
+<body>
+
+<h1>🎰 YUDHASLLOTSS 🎰</h1>
+
+<input type="text" id="username" placeholder="Nama kamu">
+
+<div class="slot" id="slot">❓ ❓ ❓</div>
+
+<button onclick="spin()">SPIN</button>
+<button onclick="daily()">🎁 Daily</button>
+
+<div class="info">
+  <p>Poin: <span id="score">0</span></p>
+  <p>Level: <span id="level">1</span></p>
+</div>
+
+<div id="result"></div>
+
+<script>
+let items = ["🍒","🍋","🍉","⭐","💎"];
+let score = localStorage.getItem("score") || 100;
+let level = localStorage.getItem("level") || 1;
+
+document.getElementById("score").innerText = score;
+document.getElementById("level").innerText = level;
+
+function playBeep(freq) {
+  let ctx = new (window.AudioContext || window.webkitAudioContext)();
+  let osc = ctx.createOscillator();
+  osc.type = "sine";
+  osc.frequency.value = freq;
+  osc.connect(ctx.destination);
+  osc.start();
+  setTimeout(() => osc.stop(), 100);
+}
+
+function spin() {
+  playBeep(300);
+
+  let interval = setInterval(() => {
+    let a = items[Math.floor(Math.random()*items.length)];
+    let b = items[Math.floor(Math.random()*items.length)];
+    let c = items[Math.floor(Math.random()*items.length)];
+    document.getElementById("slot").innerHTML = a+" "+b+" "+c;
+  }, 100);
+
+  setTimeout(() => {
+    clearInterval(interval);
+
+    let a = items[Math.floor(Math.random()*items.length)];
+    let b = items[Math.floor(Math.random()*items.length)];
+    let c = items[Math.floor(Math.random()*items.length)];
+
+    document.getElementById("slot").innerHTML = a+" "+b+" "+c;
+
+    let result = document.getElementById("result");
+
+    if (a===b && b===c) {
+      score += 50;
+      result.innerHTML = "🔥 JACKPOT!";
+      playBeep(800);
+    } else if (a===b || b===c || a===c) {
+      score += 10;
+      result.innerHTML = "✨ Menang kecil";
+    } else {
+      score -= 5;
+      result.innerHTML = "😢 Kalah";
+    }
+
+    level = Math.floor(score / 100) + 1;
+
+    localStorage.setItem("score", score);
+    localStorage.setItem("level", level);
+
+    document.getElementById("score").innerText = score;
+    document.getElementById("level").innerText = level;
+
+  }, 1500);
+}
+
+function daily() {
+  let last = localStorage.getItem("daily");
+  let today = new Date().getDate();
+
+  if (last == today) {
+    alert("Sudah ambil hari ini!");
+  } else {
+    score += 20;
+    localStorage.setItem("daily", today);
+    localStorage.setItem("score", score);
+    document.getElementById("score").innerText = score;
+    alert("🎁 +20 poin!");
+  }
+}
+</script>
+
+</body>
+</html>
