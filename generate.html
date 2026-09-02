@@ -1,0 +1,733 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Buat Laporan PKL — JokiLaporan.id</title>
+  <meta name="description" content="Isi form data PKL kamu dan generate laporan otomatis berkualitas profesional.">
+  <link rel="stylesheet" href="styles/main.css">
+  <style>
+    .gen-layout { display: grid; grid-template-columns: 1fr 360px; gap: 2rem; align-items: start; }
+    .gen-sidebar { position: sticky; top: 100px; }
+    @media (max-width: 900px) { .gen-layout { grid-template-columns: 1fr; } .gen-sidebar { display: none; } }
+    .plan-chip { border: 1px solid var(--border); border-radius: var(--radius-lg); padding: 0.75rem 1rem; cursor: pointer; transition: all var(--transition-fast); display: flex; align-items: center; gap: 0.75rem; }
+    .plan-chip:hover { border-color: var(--primary-light); background: rgba(124,58,237,0.05); }
+    .plan-chip.selected { border-color: var(--primary); background: rgba(124,58,237,0.1); }
+    .plan-chip-radio { width: 18px; height: 18px; border-radius: 50%; border: 2px solid var(--border-strong); flex-shrink: 0; transition: all var(--transition-fast); display: flex; align-items: center; justify-content: center; }
+    .plan-chip.selected .plan-chip-radio { border-color: var(--primary); background: var(--primary); }
+    .plan-chip.selected .plan-chip-radio::after { content:''; width:7px; height:7px; background:white; border-radius:50%; }
+    .step-content { display: none; }
+    .step-content.active { display: block; animation: fadeInUp 0.4s ease; }
+    .week-row { display: grid; grid-template-columns: 140px 1fr; gap: 1rem; margin-bottom: 1rem; align-items: start; }
+    @media (max-width: 600px) { .week-row { grid-template-columns: 1fr; } }
+    .preview-box { background: var(--bg-glass); border: 1px solid var(--border); border-radius: var(--radius-md); padding: 1rem; font-size: 0.85rem; color: var(--text-secondary); line-height: 1.6; max-height: 200px; overflow-y: auto; }
+  </style>
+
+  <!-- Lucide Icons -->
+  <script src="https://unpkg.com/lucide@latest"></script>
+</head>
+<body>
+<!-- NAVBAR -->
+<nav class="navbar">
+  <div class="container">
+    <div class="navbar-inner">
+      <a href="index.html" class="navbar-logo">
+        <div class="logo-icon"><i data-lucide="file-text"></i></div>
+        <span class="text-gradient">JokiLaporan</span><span style="color:var(--text-secondary)">.id</span>
+      </a>
+      <ul class="navbar-links">
+        <li><a href="index.html#pricing">Harga</a></li>
+        <li><a href="index.html#faq">FAQ</a></li>
+      </ul>
+      <div class="navbar-actions">
+        <button class="btn btn-ghost btn-sm" onclick="openModal('loginModal')">Masuk</button>
+        <button class="btn btn-primary btn-sm" onclick="openModal('registerModal')">Daftar</button>
+      </div>
+    </div>
+  </div>
+</nav>
+
+<div class="page-header">
+  <div class="container">
+    <span class="badge badge-primary" style="margin-bottom:1rem"><i data-lucide="pen-line"></i> Form Generator Laporan</span>
+    <h1 class="page-header-title">Isi Data <span class="text-gradient">Laporan PKL</span></h1>
+    <p class="page-header-subtitle">Lengkapi 4 langkah berikut untuk menghasilkan laporan PKL berkualitas profesional</p>
+  </div>
+</div>
+
+<div class="container" style="padding-bottom: 4rem">
+  <!-- TEMPLATE SELECTOR -->
+  <div style="margin-bottom:2rem">
+    <div style="display:flex;align-items:center;gap:0.75rem;margin-bottom:1rem">
+      <span style="font-size:1.1rem;font-weight:700"><i data-lucide="layout-template"></i> Pilih Jenis Laporan</span>
+      <span class="badge badge-success">Baru!</span>
+    </div>
+    <div class="template-selector" id="template-selector">
+      <div class="template-card selected" data-tpl="smk-pkl" onclick="selectTemplate('smk-pkl',this)">
+        <span class="tpl-badge badge badge-primary">Default</span>
+        <div class="tpl-icon"><i data-lucide="file-text"></i></div>
+        <div class="tpl-name">PKL SMK</div>
+        <div class="tpl-desc">Praktik Kerja Lapangan, format standar SMK</div>
+      </div>
+      <div class="template-card" data-tpl="smk-prakerin" onclick="selectTemplate('smk-prakerin',this)">
+        <div class="tpl-icon"><i data-lucide="building"></i></div>
+        <div class="tpl-name">Prakerin SMK</div>
+        <div class="tpl-desc">Praktek Kerja Industri, terminologi DU/DI</div>
+      </div>
+      <div class="template-card" data-tpl="kp-kampus" onclick="selectTemplate('kp-kampus',this)">
+        <div class="tpl-icon"><i data-lucide="graduation-cap"></i></div>
+        <div class="tpl-name">KP Kampus</div>
+        <div class="tpl-desc">Kerja Praktik D3/S1, NIM & Dosen Pembimbing</div>
+      </div>
+      <div class="template-card" data-tpl="magang" onclick="selectTemplate('magang',this)">
+        <div class="tpl-icon"><i data-lucide="briefcase"></i></div>
+        <div class="tpl-name">Magang Umum</div>
+        <div class="tpl-desc">Magang industri, format fleksibel & bebas</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- STEPS -->
+  <div class="steps-container">
+    <div class="step-item active" id="step-1-indicator">
+      <div class="step-circle">1</div>
+      <div class="step-label" id="lbl-step1">Data Siswa</div>
+    </div>
+    <div class="step-connector" id="conn-1"></div>
+    <div class="step-item" id="step-2-indicator">
+      <div class="step-circle">2</div>
+      <div class="step-label">Data DU/DI</div>
+    </div>
+    <div class="step-connector" id="conn-2"></div>
+    <div class="step-item" id="step-3-indicator">
+      <div class="step-circle">3</div>
+      <div class="step-label">Kegiatan</div>
+    </div>
+    <div class="step-connector" id="conn-3"></div>
+    <div class="step-item" id="step-4-indicator">
+      <div class="step-circle">4</div>
+      <div class="step-label">Pilih Paket</div>
+    </div>
+  </div>
+
+  <div class="gen-layout">
+    <!-- MAIN FORM -->
+    <div>
+      <!-- STEP 1: Data Siswa -->
+      <div class="step-content active" id="step-1">
+        <div class="card">
+          <h2 style="margin-bottom:0.5rem;font-size:1.4rem"><i data-lucide="clipboard-list"></i> Data Diri Siswa</h2>
+          <p style="color:var(--text-secondary);font-size:0.9rem;margin-bottom:1.5rem">Isi data dirimu sebagai siswa yang melaksanakan PKL</p>
+          <div class="form-row">
+            <div class="form-group">
+              <label class="form-label">Nama Lengkap *</label>
+              <input type="text" id="namaSiswa" class="form-input" placeholder="Nama lengkap kamu">
+              <div class="form-error">Nama wajib diisi</div>
+            </div>
+            <div class="form-group">
+              <label class="form-label">NIS *</label>
+              <input type="text" id="nis" class="form-input" placeholder="Nomor Induk Siswa">
+              <div class="form-error">NIS wajib diisi</div>
+            </div>
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label class="form-label">Kelas *</label>
+              <input type="text" id="kelas" class="form-input" placeholder="Contoh: XII RPL 2">
+              <div class="form-error">Kelas wajib diisi</div>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Jurusan / Program Keahlian *</label>
+              <select id="jurusan" class="form-select">
+                <option value="">-- Pilih Jurusan --</option>
+                <option value="Rekayasa Perangkat Lunak (RPL)">Rekayasa Perangkat Lunak (RPL)</option>
+                <option value="Teknik Komputer dan Jaringan (TKJ)">Teknik Komputer dan Jaringan (TKJ)</option>
+                <option value="Multimedia (MM)">Multimedia (MM)</option>
+                <option value="Akuntansi dan Keuangan Lembaga">Akuntansi dan Keuangan Lembaga</option>
+                <option value="Bisnis Daring dan Pemasaran">Bisnis Daring dan Pemasaran</option>
+                <option value="Otomasi dan Robotika Industri">Otomasi dan Robotika Industri</option>
+                <option value="Teknik Instalasi Tenaga Listrik">Teknik Instalasi Tenaga Listrik</option>
+                <option value="Teknik Kendaraan Ringan Otomotif">Teknik Kendaraan Ringan Otomotif</option>
+                <option value="Desain Komunikasi Visual (DKV)">Desain Komunikasi Visual (DKV)</option>
+                <option value="Perhotelan">Perhotelan</option>
+                <option value="Kuliner">Kuliner</option>
+                <option value="Lainnya">Lainnya</option>
+              </select>
+              <div class="form-error">Jurusan wajib dipilih</div>
+            </div>
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label class="form-label">Nama Sekolah *</label>
+              <input type="text" id="sekolah" class="form-input" placeholder="Contoh: SMK Negeri 1 Bandung">
+              <div class="form-error">Nama sekolah wajib diisi</div>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Kota / Kabupaten</label>
+              <input type="text" id="kota" class="form-input" placeholder="Contoh: Bandung">
+            </div>
+          </div>
+        </div>
+        <div style="display:flex;justify-content:flex-end;margin-top:1.5rem">
+          <button class="btn btn-primary btn-lg" onclick="nextStep(1)" id="btn-step1-next">Lanjut: Data DU/DI →</button>
+        </div>
+      </div>
+
+      <!-- STEP 2: Data DU/DI -->
+      <div class="step-content" id="step-2">
+        <div class="card">
+          <h2 style="margin-bottom:0.5rem;font-size:1.4rem"><i data-lucide="building"></i> Data Tempat PKL (DU/DI)</h2>
+          <p style="color:var(--text-secondary);font-size:0.9rem;margin-bottom:1.5rem">Isi informasi perusahaan atau instansi tempat kamu melaksanakan PKL</p>
+          <div class="form-group">
+            <label class="form-label">Nama Perusahaan / Instansi *</label>
+            <input type="text" id="namaPerusahaan" class="form-input" placeholder="Contoh: PT. Teknologi Maju Indonesia">
+            <div class="form-error">Nama perusahaan wajib diisi</div>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Alamat Lengkap *</label>
+            <input type="text" id="alamatPerusahaan" class="form-input" placeholder="Contoh: Jl. Sudirman No. 123, Jakarta Pusat">
+            <div class="form-error">Alamat wajib diisi</div>
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label class="form-label">Bidang Usaha *</label>
+              <input type="text" id="bidangUsaha" class="form-input" placeholder="Contoh: Teknologi Informasi & Software">
+              <div class="form-error">Bidang usaha wajib diisi</div>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Nama Pembimbing DU/DI *</label>
+              <input type="text" id="namaPembimbing" class="form-input" placeholder="Contoh: Bapak Andi Susanto, S.Kom">
+              <div class="form-error">Nama pembimbing wajib diisi</div>
+            </div>
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label class="form-label">Tanggal Mulai PKL *</label>
+              <input type="date" id="tanggalMulai" class="form-input">
+              <div class="form-error">Tanggal mulai wajib diisi</div>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Tanggal Selesai PKL *</label>
+              <input type="date" id="tanggalSelesai" class="form-input">
+              <div class="form-error">Tanggal selesai wajib diisi</div>
+            </div>
+          </div>
+        </div>
+        <div style="display:flex;justify-content:space-between;margin-top:1.5rem">
+          <button class="btn btn-outline btn-lg" onclick="prevStep(2)">← Kembali</button>
+          <button class="btn btn-primary btn-lg" onclick="nextStep(2)" id="btn-step2-next">Lanjut: Kegiatan PKL →</button>
+        </div>
+      </div>
+
+      <!-- STEP 3: Detail Kegiatan -->
+      <div class="step-content" id="step-3">
+        <div class="card">
+          <h2 style="margin-bottom:0.5rem;font-size:1.4rem"><i data-lucide="calendar"></i> Detail Kegiatan PKL</h2>
+          <p style="color:var(--text-secondary);font-size:0.9rem;margin-bottom:1.5rem">Ceritakan kegiatan yang kamu lakukan selama PKL (semakin detail, semakin bagus hasilnya!)</p>
+
+          <div style="margin-bottom:1.5rem">
+            <label class="form-label">Jumlah Minggu Kegiatan yang Ingin Diisi</label>
+            <select id="jumlahMinggu" class="form-select" onchange="renderWeekRows()" style="max-width:200px">
+              <option value="4">4 Minggu</option>
+              <option value="6">6 Minggu</option>
+              <option value="8" selected>8 Minggu</option>
+              <option value="10">10 Minggu</option>
+              <option value="12">12 Minggu</option>
+            </select>
+          </div>
+
+          <div id="week-rows-container"></div>
+
+          <div class="form-group" style="margin-top:1.5rem">
+            <label class="form-label">Upload Foto Kegiatan / Dokumentasi PKL (Opsional)</label>
+            <div style="display:flex;align-items:center;gap:1rem;">
+              <label for="fotoKegiatan" class="btn btn-outline" style="cursor:pointer">
+                <i data-lucide="image"></i> Pilih Foto
+              </label>
+              <input type="file" id="fotoKegiatan" accept="image/*" style="display:none" onchange="document.getElementById('fotoName').textContent = this.files[0]?.name || 'Tidak ada file dipilih'">
+              <span id="fotoName" style="color:var(--text-secondary);font-size:0.9rem">Tidak ada file dipilih</span>
+            </div>
+            <div class="form-hint" style="color:var(--primary);font-weight:600;margin-top:0.5rem">
+              <i data-lucide="sparkles" style="width:14px;height:14px;"></i> AI kami akan menyusun teks deskripsi kegiatan berdasarkan foto yang diupload & jurusan yang dipilih!
+            </div>
+          </div>
+
+          <div class="form-group" style="margin-top:1.5rem">
+            <label class="form-label">Kendala yang Dihadapi Selama PKL</label>
+            <textarea id="kendala" class="form-textarea" placeholder="Ceritakan kendala/hambatan yang kamu hadapi selama PKL dan bagaimana cara mengatasinya..." rows="3"></textarea>
+            <div class="form-hint">Opsional — isi untuk membuat laporan lebih kaya dan realistis</div>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">Kesimpulan (Opsional)</label>
+            <textarea id="kesimpulan" class="form-textarea" placeholder="Tuliskan kesimpulan singkat dari pengalaman PKL kamu... (jika kosong, akan digenerate otomatis)" rows="3"></textarea>
+          </div>
+        </div>
+        <div style="display:flex;justify-content:space-between;margin-top:1.5rem">
+          <button class="btn btn-outline btn-lg" onclick="prevStep(3)">← Kembali</button>
+          <button class="btn btn-primary btn-lg" onclick="nextStep(3)" id="btn-step3-next">Lanjut: Pilih Paket →</button>
+        </div>
+      </div>
+
+      <!-- STEP 4: Pilih Paket -->
+      <div class="step-content" id="step-4">
+        <div class="card">
+          <h2 style="margin-bottom:0.5rem;font-size:1.4rem"><i data-lucide="credit-card"></i> Pilih Paket Laporan</h2>
+          <p style="color:var(--text-secondary);font-size:0.9rem;margin-bottom:1.5rem">Pilih paket yang sesuai kebutuhanmu</p>
+
+          <div style="display:flex;flex-direction:column;gap:1rem">
+            <div class="plan-chip" id="chip-basic" onclick="selectPlan('basic',this)">
+              <div class="plan-chip-radio"></div>
+              <div style="font-size:1.5rem"><i data-lucide="file"></i></div>
+              <div style="flex:1">
+                <div style="display:flex;align-items:center;gap:0.75rem">
+                  <strong>Basic</strong>
+                  <span class="badge badge-cyan">Gratis</span>
+                </div>
+                <div style="font-size:0.85rem;color:var(--text-secondary);margin-top:2px">1x Laporan, Download PDF, Tonton Iklan 30dtk</div>
+              </div>
+            </div>
+
+            <div class="plan-chip selected" id="chip-pro" onclick="selectPlan('pro',this)">
+              <div class="plan-chip-radio"></div>
+              <div style="font-size:1.5rem"><i data-lucide="star"></i></div>
+              <div style="flex:1">
+                <div style="display:flex;align-items:center;gap:0.75rem">
+                  <strong>Pro</strong>
+                  <span class="badge badge-primary">Rp 30.000</span>
+                  <span class="badge badge-success">Terpopuler</span>
+                </div>
+                <div style="font-size:0.85rem;color:var(--text-secondary);margin-top:2px">1x Laporan, Download PDF + DOCX, Tanpa Iklan, 5x Revisi</div>
+              </div>
+            </div>
+
+            <div class="plan-chip" id="chip-premium" onclick="selectPlan('premium',this)">
+              <div class="plan-chip-radio"></div>
+              <div style="font-size:1.5rem"><i data-lucide="crown"></i></div>
+              <div style="flex:1">
+                <div style="display:flex;align-items:center;gap:0.75rem">
+                  <strong>Premium</strong>
+                  <span class="badge badge-warning">Rp 50.000</span>
+                </div>
+                <div style="font-size:0.85rem;color:var(--text-secondary);margin-top:2px">3x Laporan, PDF + DOCX, Tanpa Iklan, 10x Revisi</div>
+              </div>
+            </div>
+          </div>
+
+          <div style="margin-top:1.5rem;padding:1rem;background:var(--bg-glass);border-radius:var(--radius-md);border:1px solid var(--border)">
+            <strong><i data-lucide="clipboard-list"></i> Preview Data Kamu:</strong>
+            <div class="preview-box" id="data-preview" style="margin-top:0.75rem">—</div>
+          </div>
+        </div>
+        <div style="display:flex;justify-content:space-between;margin-top:1.5rem">
+          <button class="btn btn-outline btn-lg" onclick="prevStep(4)">← Kembali</button>
+          <button class="btn btn-primary btn-lg" onclick="proceedToPayment()" id="btn-checkout"><i data-lucide="credit-card"></i> Lanjut ke Pembayaran</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- SIDEBAR: Live Preview -->
+    <div class="sidebar-preview-wrap">
+      <!-- Live Cover Preview -->
+      <div class="card" style="padding:1rem">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:0.75rem">
+          <h4 style="font-size:0.9rem"><i data-lucide="eye"></i> Preview Cover</h4>
+          <span class="badge badge-success" style="font-size:0.7rem">Live</span>
+        </div>
+        <div class="cover-preview" id="live-cover-preview">
+          <div class="cp-logo"><i data-lucide="school"></i></div>
+          <div class="cp-sekolah cp-placeholder" id="cp-sekolah">Nama Sekolah</div>
+          <div class="cp-divider"></div>
+          <div class="cp-title" id="cp-title">LAPORAN PRAKTIK KERJA LAPANGAN</div>
+          <div class="cp-divider-thin"></div>
+          <div class="cp-sub">Dilaksanakan di</div>
+          <div class="cp-at cp-placeholder" id="cp-perusahaan">Nama Perusahaan / Instansi</div>
+          <div class="cp-sub cp-placeholder" id="cp-alamat">Alamat Perusahaan</div>
+          <br>
+          <div class="cp-sub">Disusun Oleh :</div>
+          <div class="cp-identity">
+            <table>
+              <tr><td id="cp-lbl-nama">Nama</td><td>: <span id="cp-nama" class="cp-placeholder">Nama Lengkap</span></td></tr>
+              <tr><td id="cp-lbl-nis">NIS</td><td>: <span id="cp-nis" class="cp-placeholder">—</span></td></tr>
+              <tr><td>Kelas</td><td>: <span id="cp-kelas" class="cp-placeholder">—</span></td></tr>
+              <tr><td>Jurusan</td><td>: <span id="cp-jurusan" class="cp-placeholder">—</span></td></tr>
+            </table>
+          </div>
+          <div class="cp-year" id="cp-year"></div>
+        </div>
+        <div style="font-size:0.75rem;color:var(--text-muted);text-align:center;margin-top:0.5rem">Otomatis diperbarui saat kamu mengetik</div>
+      </div>
+
+      <!-- Plan Info -->
+      <div class="card">
+        <h4 style="margin-bottom:1rem"><i data-lucide="package"></i> Paket yang Dipilih</h4>
+        <div style="text-align:center;padding:0.5rem 0">
+          <div style="font-size:2rem;margin-bottom:0.5rem" id="sidebar-plan-icon"><i data-lucide="star"></i></div>
+          <div style="font-family:var(--font-heading);font-size:1.2rem;font-weight:700" id="sidebar-plan-name">Pro</div>
+          <div style="font-size:1.6rem;font-weight:800;margin:0.5rem 0" id="sidebar-plan-price"><span class="text-gradient">Rp 30.000</span></div>
+          <div style="font-size:0.8rem;color:var(--text-secondary)" id="sidebar-plan-desc">1x Laporan + PDF + DOCX</div>
+        </div>
+      </div>
+
+      <!-- Benefits -->
+      <div class="card">
+        <h4 style="margin-bottom:1rem"><i data-lucide="check-circle-2"></i> Yang Kamu Dapat</h4>
+        <ul style="list-style:none;display:flex;flex-direction:column;gap:0.6rem">
+          <li style="display:flex;align-items:center;gap:0.75rem;font-size:0.85rem"><span style="color:#86efac"><i data-lucide="check"></i></span> 11 Bagian Laporan Lengkap</li>
+          <li style="display:flex;align-items:center;gap:0.75rem;font-size:0.85rem"><span style="color:#86efac"><i data-lucide="check"></i></span> Kata Pengantar & Daftar Isi</li>
+          <li style="display:flex;align-items:center;gap:0.75rem;font-size:0.85rem"><span style="color:#86efac"><i data-lucide="check"></i></span> Daftar Pustaka & Lampiran</li>
+          <li style="display:flex;align-items:center;gap:0.75rem;font-size:0.85rem"><span style="color:#86efac"><i data-lucide="check"></i></span> Download DOCX & PDF</li>
+          <li style="display:flex;align-items:center;gap:0.75rem;font-size:0.85rem"><span style="color:#86efac"><i data-lucide="check"></i></span> Teks sesuai Jurusan</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- LOGIN MODAL -->
+<div class="modal-overlay" id="loginModal">
+  <div class="modal">
+    <div class="modal-header">
+      <h3 class="modal-title"><i data-lucide="hand"></i> Masuk ke Akun</h3>
+      <button class="modal-close" onclick="closeModal('loginModal')">×</button>
+    </div>
+    <form onsubmit="handleLogin(event)">
+      <div class="form-group">
+        <label class="form-label">Email</label>
+        <input type="email" id="login-email" class="form-input" placeholder="email@contoh.com" required>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Password</label>
+        <input type="password" id="login-password" class="form-input" placeholder="••••••••" required>
+      </div>
+      <button type="submit" class="btn btn-primary btn-full btn-lg">Masuk</button>
+    </form>
+    <p style="text-align:center;margin-top:1.5rem;color:var(--text-secondary);font-size:0.9rem">
+      Belum punya akun? <button onclick="closeModal('loginModal');openModal('registerModal')" style="background:none;border:none;color:var(--primary-light);cursor:pointer;font-weight:600">Daftar sekarang</button>
+    </p>
+  </div>
+</div>
+
+<!-- REGISTER MODAL -->
+<div class="modal-overlay" id="registerModal">
+  <div class="modal">
+    <div class="modal-header">
+      <h3 class="modal-title"><i data-lucide="rocket"></i> Buat Akun Gratis</h3>
+      <button class="modal-close" onclick="closeModal('registerModal')">×</button>
+    </div>
+    <form onsubmit="handleRegister(event)">
+      <div class="form-group">
+        <label class="form-label">Nama Lengkap</label>
+        <input type="text" id="reg-name" class="form-input" placeholder="Nama lengkap kamu" required>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Email</label>
+        <input type="email" id="reg-email" class="form-input" placeholder="email@contoh.com" required>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Password</label>
+        <input type="password" id="reg-password" class="form-input" placeholder="Min. 6 karakter" required>
+      </div>
+      <button type="submit" class="btn btn-primary btn-full btn-lg">Daftar Gratis</button>
+    </form>
+    <p style="text-align:center;margin-top:1.5rem;color:var(--text-secondary);font-size:0.9rem">
+      Sudah punya akun? <button onclick="closeModal('registerModal');openModal('loginModal')" style="background:none;border:none;color:var(--primary-light);cursor:pointer;font-weight:600">Masuk di sini</button>
+    </p>
+  </div>
+</div>
+
+<script src="scripts/app.js"></script>
+<script>
+let currentStep = 1;
+let selectedPlan = 'pro';
+let selectedTemplate = 'smk-pkl';
+
+// Pre-select plan from URL
+const urlPlan = new URLSearchParams(window.location.search).get('plan');
+if (urlPlan && ['basic','pro','premium'].includes(urlPlan)) {
+  selectedPlan = urlPlan;
+}
+
+// ===================== TEMPLATE LOGIC =====================
+const TEMPLATE_META = {
+  'smk-pkl':      { title: 'LAPORAN PRAKTIK KERJA LAPANGAN', nisLabel: 'NIS', siswaLabel: 'Siswa', pembimbingLabel: 'Guru Pembimbing', step1Label: 'Data Siswa' },
+  'smk-prakerin': { title: 'LAPORAN PRAKTIK KERJA INDUSTRI', nisLabel: 'NIS', siswaLabel: 'Siswa', pembimbingLabel: 'Guru Pembimbing', step1Label: 'Data Siswa' },
+  'kp-kampus':    { title: 'LAPORAN KERJA PRAKTIK (KP)', nisLabel: 'NIM', siswaLabel: 'Mahasiswa', pembimbingLabel: 'Dosen Pembimbing', step1Label: 'Data Mahasiswa' },
+  'magang':       { title: 'LAPORAN MAGANG INDUSTRI', nisLabel: 'ID/NIM', siswaLabel: 'Peserta', pembimbingLabel: 'Pembimbing Lapangan', step1Label: 'Data Peserta' },
+};
+
+function selectTemplate(id, el) {
+  selectedTemplate = id;
+  document.querySelectorAll('.template-card').forEach(c => c.classList.remove('selected'));
+  el.classList.add('selected');
+  const meta = TEMPLATE_META[id];
+  // Update labels
+  document.getElementById('cp-title').textContent = meta.title;
+  document.getElementById('cp-lbl-nis').textContent = meta.nisLabel;
+  document.getElementById('lbl-step1').textContent = meta.step1Label;
+  // Update NIS label in form
+  const nisLabelEl = document.querySelector('label[for-id="nis"]') || document.querySelector('#nis')?.closest('.form-group')?.querySelector('.form-label');
+  if (nisLabelEl) nisLabelEl.textContent = meta.nisLabel + ' *';
+  updateLivePreview();
+}
+
+// ===================== LIVE PREVIEW =====================
+function updateLivePreview() {
+  const get = id => (document.getElementById(id)?.value || '').trim();
+  const tplMeta = TEMPLATE_META[selectedTemplate] || TEMPLATE_META['smk-pkl'];
+  const year = new Date().getFullYear();
+
+  const setEl = (id, val, placeholder) => {
+    const el = document.getElementById(id);
+    if (!el) return;
+    if (val) {
+      el.textContent = val;
+      el.classList.remove('cp-placeholder');
+    } else {
+      el.textContent = placeholder;
+      el.classList.add('cp-placeholder');
+    }
+  };
+
+  document.getElementById('cp-title').textContent = tplMeta.title;
+  document.getElementById('cp-lbl-nis').textContent = tplMeta.nisLabel;
+  setEl('cp-sekolah', get('sekolah'), 'Nama Sekolah / Universitas');
+  setEl('cp-perusahaan', get('namaPerusahaan'), 'Nama Perusahaan / Instansi');
+  setEl('cp-alamat', get('alamatPerusahaan'), 'Alamat Perusahaan');
+  setEl('cp-nama', get('namaSiswa'), 'Nama Lengkap');
+  setEl('cp-nis', get('nis'), '—');
+  setEl('cp-kelas', get('kelas'), '—');
+  setEl('cp-jurusan', get('jurusan'), '—');
+  document.getElementById('cp-year').textContent = get('sekolah') ? `Tahun Pelajaran ${year}/${year+1}` : '';
+}
+
+
+function renderWeekRows() {
+  const n = parseInt(document.getElementById('jumlahMinggu').value);
+  const container = document.getElementById('week-rows-container');
+  container.innerHTML = '';
+  for (let i = 1; i <= n; i++) {
+    container.innerHTML += `
+      <div class="week-row">
+        <div>
+          <label class="form-label">Minggu ${i}</label>
+          <input type="date" id="week-${i}-date" class="form-input" placeholder="Tanggal">
+        </div>
+        <div>
+          <label class="form-label">Kegiatan Minggu ${i}</label>
+          <textarea id="week-${i}-kegiatan" class="form-textarea" rows="2" placeholder="Ceritakan kegiatan yang kamu lakukan pada minggu ke-${i}..."></textarea>
+        </div>
+      </div>`;
+  }
+}
+
+function selectPlan(id, el) {
+  selectedPlan = id;
+  document.querySelectorAll('.plan-chip').forEach(c => c.classList.remove('selected'));
+  el.classList.add('selected');
+
+  const plans = {
+    basic: { icon: '<i data-lucide="file"></i>', name: 'Basic', price: 'Rp 15.000', desc: '1x Laporan + PDF' },
+    pro: { icon: '<i data-lucide="star"></i>', name: 'Pro', price: 'Rp 35.000', desc: '1x Laporan + PDF + DOCX' },
+    premium: { icon: '<i data-lucide="crown"></i>', name: 'Premium', price: 'Rp 75.000', desc: '3x Laporan + PDF + DOCX + 2x Revisi' }
+  };
+  const p = plans[id];
+  document.getElementById('sidebar-plan-icon').textContent = p.icon;
+  document.getElementById('sidebar-plan-name').textContent = p.name;
+  document.getElementById('sidebar-plan-price').innerHTML = `<span class="text-gradient">${p.price}</span>`;
+  document.getElementById('sidebar-plan-desc').textContent = p.desc;
+}
+
+function updateStepIndicators(step) {
+  for (let i = 1; i <= 4; i++) {
+    const ind = document.getElementById(`step-${i}-indicator`);
+    ind.classList.remove('active','completed');
+    if (i < step) ind.classList.add('completed');
+    if (i === step) ind.classList.add('active');
+    if (i < 4) {
+      const conn = document.getElementById(`conn-${i}`);
+      conn.classList.toggle('active', i < step);
+    }
+  }
+}
+
+function validateStep(step) {
+  let valid = true;
+  let missingField = false;
+  const fields = {
+    1: ['namaSiswa','nis','kelas','jurusan','sekolah'],
+    2: ['namaPerusahaan','alamatPerusahaan','bidangUsaha','namaPembimbing','tanggalMulai','tanggalSelesai'],
+    3: [],
+    4: []
+  };
+  fields[step].forEach(id => {
+    const el = document.getElementById(id);
+    const group = el.closest('.form-group');
+    if (!el.value.trim()) {
+      group.classList.add('has-error');
+      valid = false;
+      missingField = true;
+    } else {
+      group.classList.remove('has-error');
+    }
+  });
+
+  if (missingField) {
+    APP.notify('Mohon lengkapi semua field yang wajib diisi!', 'error');
+  }
+
+  // Step 2: validate dates
+  if (step === 2 && !missingField) {
+    const start = new Date(document.getElementById('tanggalMulai').value);
+    const end = new Date(document.getElementById('tanggalSelesai').value);
+    if (start >= end) {
+      APP.notify('Tanggal selesai harus setelah tanggal mulai!', 'error');
+      valid = false;
+    }
+  }
+  return valid;
+}
+
+function nextStep(from) {
+  if (!validateStep(from)) return;
+  document.getElementById(`step-${from}`).classList.remove('active');
+  document.getElementById(`step-${from + 1}`).classList.add('active');
+  currentStep = from + 1;
+  updateStepIndicators(currentStep);
+  if (from + 1 === 4) updatePreview();
+  window.scrollTo({ top: 200, behavior: 'smooth' });
+}
+
+function prevStep(from) {
+  document.getElementById(`step-${from}`).classList.remove('active');
+  document.getElementById(`step-${from - 1}`).classList.add('active');
+  currentStep = from - 1;
+  updateStepIndicators(currentStep);
+  window.scrollTo({ top: 200, behavior: 'smooth' });
+}
+
+function updatePreview() {
+  const d = collectFormData();
+  const previewEl = document.getElementById('data-preview');
+  previewEl.innerHTML = `
+    <strong>Siswa:</strong> ${d.namaSiswa || '-'}<br>
+    <strong>NIS:</strong> ${d.nis || '-'} | <strong>Kelas:</strong> ${d.kelas || '-'}<br>
+    <strong>Jurusan:</strong> ${d.jurusan || '-'}<br>
+    <strong>Sekolah:</strong> ${d.sekolah || '-'}<br><br>
+    <strong>Perusahaan:</strong> ${d.namaPerusahaan || '-'}<br>
+    <strong>Alamat:</strong> ${d.alamatPerusahaan || '-'}<br>
+    <strong>Pembimbing:</strong> ${d.namaPembimbing || '-'}<br>
+    <strong>Periode:</strong> ${d.tanggalMulai || '-'} s.d. ${d.tanggalSelesai || '-'}
+  `;
+}
+
+function collectFormData() {
+  const n = parseInt(document.getElementById('jumlahMinggu')?.value || 8);
+  const kegiatanMingguan = [];
+  for (let i = 1; i <= n; i++) {
+    const kegiatan = document.getElementById(`week-${i}-kegiatan`)?.value || '';
+    const tanggal = document.getElementById(`week-${i}-date`)?.value || '';
+    if (kegiatan.trim()) kegiatanMingguan.push({ minggu: i, tanggal, kegiatan });
+  }
+  return {
+    namaSiswa: document.getElementById('namaSiswa')?.value || '',
+    nis: document.getElementById('nis')?.value || '',
+    kelas: document.getElementById('kelas')?.value || '',
+    jurusan: document.getElementById('jurusan')?.value || '',
+    sekolah: document.getElementById('sekolah')?.value || '',
+    kota: document.getElementById('kota')?.value || '',
+    namaPerusahaan: document.getElementById('namaPerusahaan')?.value || '',
+    alamatPerusahaan: document.getElementById('alamatPerusahaan')?.value || '',
+    bidangUsaha: document.getElementById('bidangUsaha')?.value || '',
+    namaPembimbing: document.getElementById('namaPembimbing')?.value || '',
+    tanggalMulai: document.getElementById('tanggalMulai')?.value || '',
+    tanggalSelesai: document.getElementById('tanggalSelesai')?.value || '',
+    kendala: document.getElementById('kendala')?.value || '',
+    kesimpulan: document.getElementById('kesimpulan')?.value || '',
+    fotoDiupload: document.getElementById('fotoKegiatan')?.files?.length > 0,
+    template: selectedTemplate,
+    kegiatanMingguan
+  };
+}
+
+function proceedToPayment() {
+  const user = APP.getUser();
+  if (!user) {
+    APP.notify('Silakan login atau daftar terlebih dahulu!', 'error');
+    setTimeout(() => openModal('loginModal'), 500);
+    return;
+  }
+  const data = collectFormData();
+  APP.setFormData(data);
+  APP.setPlan({ id: selectedPlan });
+  window.location.href = 'payment.html';
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+  renderWeekRows();
+  // Pre-select plan chip
+  const chip = document.getElementById(`chip-${selectedPlan}`);
+  if (chip) selectPlan(selectedPlan, chip);
+  updateStepIndicators(1);
+
+  // Hook all inputs to live preview
+  const liveFields = ['namaSiswa','nis','kelas','jurusan','sekolah','kota','namaPerusahaan','alamatPerusahaan'];
+  liveFields.forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.addEventListener('input', updateLivePreview);
+    if (el) el.addEventListener('change', updateLivePreview);
+  });
+
+  // Init preview
+  updateLivePreview();
+  if (typeof lucide !== 'undefined') lucide.createIcons();
+
+  // ===================== AUTO-SAVE =====================
+  const savedData = localStorage.getItem('joki_autosave');
+  if (savedData) {
+    try {
+      const parsed = JSON.parse(savedData);
+      Object.keys(parsed).forEach(id => {
+        const el = document.getElementById(id);
+        if (el) {
+          el.value = parsed[id];
+          if (id === 'jumlahMinggu') renderWeekRows();
+        }
+      });
+      // Restore dynamic week fields
+      Object.keys(parsed).forEach(id => {
+        if (id.startsWith('week-')) {
+          const el = document.getElementById(id);
+          if (el) el.value = parsed[id];
+        }
+      });
+      updateLivePreview();
+    } catch(e) { console.error('Failed to load auto-save', e); }
+  }
+
+  // Hook all form inputs to auto-save
+  const allInputs = document.querySelectorAll('.form-input, .form-select, .form-textarea');
+  allInputs.forEach(el => {
+    el.addEventListener('input', saveToLocal);
+    el.addEventListener('change', saveToLocal);
+  });
+});
+
+function saveToLocal() {
+  const data = {};
+  const allInputs = document.querySelectorAll('.form-input, .form-select, .form-textarea');
+  allInputs.forEach(el => {
+    if (el.id) data[el.id] = el.value;
+  });
+  localStorage.setItem('joki_autosave', JSON.stringify(data));
+}
+</script>
+
+<script>
+  if (typeof lucide !== 'undefined') {
+    lucide.createIcons();
+  }
+</script>
+</body>
+
+</html>

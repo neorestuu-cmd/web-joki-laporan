@@ -1,163 +1,487 @@
 <!DOCTYPE html>
 <html lang="id">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>YUDHASLLOTSS PRO</title>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>JokiLaporan.id — Generator Laporan PKL Otomatis & Instan</title>
+  <meta name="description" content="Buat laporan PKL secara otomatis dan instan dengan JokiLaporan.id. Isi form, bayar, download — selesai dalam menit!">
+  <link rel="stylesheet" href="styles/main.css">
+  <style>
+    .how-step { display: flex; gap: 1.5rem; align-items: flex-start; padding: 1.5rem; background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius-lg); transition: all var(--transition-base); }
+    .how-step:hover { border-color: var(--border-primary); transform: translateX(8px); }
+    .how-number { width: 48px; height: 48px; border-radius: 50%; background: var(--grad-primary); display: flex; align-items: center; justify-content: center; font-family: var(--font-heading); font-weight: 800; font-size: 1.1rem; color: white; flex-shrink: 0; box-shadow: 0 4px 15px rgba(124,58,237,0.4); }
+    .pricing-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1.5rem; }
+    @media (max-width: 768px) { .pricing-grid { grid-template-columns: 1fr; } }
+    .floating-card { animation: floatCard 6s ease-in-out infinite; }
+    .floating-card-2 { animation: floatCard 6s ease-in-out infinite; animation-delay: -3s; }
+    @keyframes floatCard { 0%,100% { transform: translateY(0); } 50% { transform: translateY(-12px); } }
+    .hero-mockup { background: var(--bg-card); border: 1px solid var(--border-strong); border-radius: var(--radius-xl); padding: 1.5rem; max-width: 380px; margin: 3rem auto 0; text-align: left; position: relative; }
+    .mockup-header { display: flex; align-items: center; gap: 0.5rem; margin-bottom: 1rem; padding-bottom: 1rem; border-bottom: 1px solid var(--border); }
+    .mockup-dot { width: 10px; height: 10px; border-radius: 50%; }
+    .mockup-field { background: var(--bg-glass); border: 1px solid var(--border); border-radius: 8px; padding: 0.5rem 0.75rem; margin-bottom: 0.5rem; font-size: 0.8rem; color: var(--text-secondary); }
+    .mockup-field strong { color: var(--text-primary); }
+    .mockup-progress { height: 4px; background: var(--border); border-radius: 2px; margin: 1rem 0; overflow: hidden; }
+    .mockup-progress-bar { height: 100%; width: 75%; background: var(--grad-primary); border-radius: 2px; animation: progressAnim 2s ease-in-out infinite; }
+    @keyframes progressAnim { 0% { width: 60%; } 50% { width: 85%; } 100% { width: 60%; } }
+    .live-badge { position: absolute; top: -10px; right: 1rem; background: rgba(34,197,94,0.2); border: 1px solid rgba(34,197,94,0.4); color: #86efac; padding: 3px 10px; border-radius: 99px; font-size: 0.75rem; font-weight: 600; display: flex; align-items: center; gap: 5px; }
+    .live-dot { width: 7px; height: 7px; background: #22c55e; border-radius: 50%; animation: pulse 1.5s ease infinite; }
+  </style>
 
-<style>
-body {
-  font-family: Arial;
-  text-align: center;
-  background: radial-gradient(circle, #000428, #004e92);
-  color: white;
-}
-
-h1 {
-  color: gold;
-  text-shadow: 0 0 15px gold;
-}
-
-input {
-  padding: 10px;
-  border-radius: 10px;
-  border: none;
-}
-
-.slot {
-  font-size: 70px;
-  margin: 30px;
-  letter-spacing: 15px;
-  animation: glow 1s infinite alternate;
-}
-
-@keyframes glow {
-  from { text-shadow: 0 0 10px white; }
-  to { text-shadow: 0 0 25px gold; }
-}
-
-button {
-  padding: 15px 25px;
-  margin: 10px;
-  border: none;
-  border-radius: 10px;
-  background: gold;
-  font-size: 18px;
-  cursor: pointer;
-  box-shadow: 0 0 10px gold;
-}
-
-button:hover {
-  background: orange;
-}
-
-.info {
-  font-size: 20px;
-  margin-top: 10px;
-}
-
-#result {
-  margin-top: 15px;
-  font-size: 20px;
-}
-</style>
+  <!-- Lucide Icons -->
+  <script src="https://unpkg.com/lucide@latest"></script>
 </head>
-
 <body>
+<!-- NAVBAR -->
+<nav class="navbar">
+  <div class="container">
+    <div class="navbar-inner">
+      <a href="index.html" class="navbar-logo">
+        <div class="logo-icon"><i data-lucide="file-text"></i></div>
+        <span class="text-gradient">JokiLaporan</span><span style="color:var(--text-secondary)">.id</span>
+      </a>
+      <ul class="navbar-links">
+        <li><a href="#features">Fitur</a></li>
+        <li><a href="#how">Cara Kerja</a></li>
+        <li><a href="#pricing">Harga</a></li>
+        <li><a href="#testimonials">Testimoni</a></li>
+        <li><a href="#faq">FAQ</a></li>
+      </ul>
+      <div class="navbar-actions">
+        <button class="btn btn-ghost btn-sm" onclick="openModal('loginModal')">Masuk</button>
+        <button class="btn btn-primary btn-sm" onclick="openModal('registerModal')">Daftar Gratis</button>
+      </div>
+    </div>
+  </div>
+</nav>
 
-<h1>🎰 YUDHASLLOTSS 🎰</h1>
+<!-- HERO -->
+<section class="hero">
+  <div class="hero-bg"></div>
+  <div class="hero-grid"></div>
+  <div class="hero-orb hero-orb-1"></div>
+  <div class="hero-orb hero-orb-2"></div>
+  <div class="hero-orb hero-orb-3"></div>
+  <div class="container">
+    <div class="hero-content">
+      <div class="hero-badge">
+        <span class="badge badge-primary"><i data-lucide="sparkles"></i> #1 Platform Laporan PKL Indonesia</span>
+      </div>
+      <h1 class="hero-title">
+        Laporan PKL <span class="text-gradient">Profesional</span><br>dalam Hitungan Menit
+      </h1>
+      <p class="hero-subtitle">
+        Cukup isi data, pilih paket, bayar — laporan PKL lengkap & siap cetak langsung bisa kamu download. <strong style="color:var(--primary-light)">Tidak perlu nunggu berhari-hari!</strong>
+      </p>
+      <div class="hero-cta">
+        <a href="generate.html" class="btn btn-primary btn-lg" id="cta-buat-laporan">
+          <i data-lucide="pen-line"></i> Buat Laporan Sekarang
+        </a>
+        <a href="#how" class="btn btn-outline btn-lg">Pelajari Cara Kerja</a>
+      </div>
 
-<input type="text" id="username" placeholder="Nama kamu">
+      <!-- Mockup Card -->
+      <div class="hero-mockup floating-card">
+        <div class="live-badge"><span class="live-dot"></span> Generating...</div>
+        <div class="mockup-header">
+          <div class="mockup-dot" style="background:#ef4444"></div>
+          <div class="mockup-dot" style="background:#f59e0b"></div>
+          <div class="mockup-dot" style="background:#22c55e"></div>
+          <span style="font-size:0.8rem;color:var(--text-muted);margin-left:0.5rem">Laporan PKL Generator</span>
+        </div>
+        <div class="mockup-field"><strong>Siswa:</strong> Ahmad Rizki Pratama</div>
+        <div class="mockup-field"><strong>Perusahaan:</strong> PT. Teknologi Maju</div>
+        <div class="mockup-field"><strong>Jurusan:</strong> Rekayasa Perangkat Lunak</div>
+        <div class="mockup-field"><strong>Durasi:</strong> 22 Juli – 20 September 2025</div>
+        <div class="mockup-progress"><div class="mockup-progress-bar"></div></div>
+        <div style="display:flex;align-items:center;justify-content:space-between">
+          <span style="font-size:0.8rem;color:var(--text-secondary)">Membuat laporan...</span>
+          <span class="badge badge-success"><i data-lucide="check-circle-2"></i> Selesai!</span>
+        </div>
+      </div>
 
-<div class="slot" id="slot">❓ ❓ ❓</div>
+      <!-- Stats -->
+      <div class="hero-stats">
+        <div class="stat-item">
+          <div class="stat-value">2.400+</div>
+          <div class="stat-label">Laporan Dibuat</div>
+        </div>
+        <div class="stat-item">
+          <div class="stat-value">98%</div>
+          <div class="stat-label">Tingkat Kepuasan</div>
+        </div>
+        <div class="stat-item">
+          <div class="stat-value">&lt; 3 Menit</div>
+          <div class="stat-label">Proses Generate</div>
+        </div>
+        <div class="stat-item">
+          <div class="stat-value">4.9<i data-lucide="star"></i></div>
+          <div class="stat-label">Rating Pengguna</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
 
-<button onclick="spin()">SPIN</button>
-<button onclick="daily()">🎁 Daily</button>
+<!-- FEATURES -->
+<section class="section" id="features">
+  <div class="container">
+    <div style="text-align:center;margin-bottom:var(--space-3xl)">
+      <span class="section-tag">Mengapa Pilih Kami</span>
+      <h2 class="section-title">Fitur yang Bikin Kamu <span class="text-gradient">Jatuh Cinta</span></h2>
+      <p class="section-subtitle" style="margin:0 auto">Platform terlengkap untuk generate laporan PKL otomatis dengan kualitas profesional</p>
+    </div>
+    <div class="grid-3">
+      <div class="card reveal">
+        <div class="feature-icon feature-icon-purple"><i data-lucide="zap"></i></div>
+        <h3 style="margin-bottom:0.75rem">Generate Instan</h3>
+        <p style="color:var(--text-secondary);font-size:0.95rem">Laporan PKL lengkap 4 BAB siap dalam &lt;3 menit. Tidak ada waiting time yang lama!</p>
+      </div>
+      <div class="card reveal">
+        <div class="feature-icon feature-icon-cyan"><i data-lucide="file"></i></div>
+        <h3 style="margin-bottom:0.75rem">Format Profesional</h3>
+        <p style="color:var(--text-secondary);font-size:0.95rem">Template laporan mengikuti standar SMK/SMA nasional. Langsung bisa dikumpulkan ke sekolah!</p>
+      </div>
+      <div class="card reveal">
+        <div class="feature-icon feature-icon-pink"><i data-lucide="save"></i></div>
+        <h3 style="margin-bottom:0.75rem">Download DOCX & PDF</h3>
+        <p style="color:var(--text-secondary);font-size:0.95rem">Tersedia dalam format Word (DOCX) yang bisa diedit & PDF yang rapi dan siap cetak.</p>
+      </div>
+      <div class="card reveal">
+        <div class="feature-icon feature-icon-amber"><i data-lucide="pencil"></i></div>
+        <h3 style="margin-bottom:0.75rem">Bisa Dikustomisasi</h3>
+        <p style="color:var(--text-secondary);font-size:0.95rem">Input detail kegiatan harian/mingguan, kendala, dan kesimpulan sesuai pengalamanmu.</p>
+      </div>
+      <div class="card reveal">
+        <div class="feature-icon feature-icon-green"><i data-lucide="lock"></i></div>
+        <h3 style="margin-bottom:0.75rem">Data Aman & Privat</h3>
+        <p style="color:var(--text-secondary);font-size:0.95rem">Data pribadi kamu tersimpan aman. Kami tidak membagikan data ke pihak ketiga manapun.</p>
+      </div>
+      <div class="card reveal">
+        <div class="feature-icon feature-icon-indigo"><i data-lucide="coins"></i></div>
+        <h3 style="margin-bottom:0.75rem">Gratis / Terjangkau</h3>
+        <p style="color:var(--text-secondary);font-size:0.95rem">Bisa buat laporan gratis hanya dengan menonton iklan, atau upgrade paket premium yang sangat terjangkau!</p>
+      </div>
+    </div>
+  </div>
+</section>
 
-<div class="info">
-  <p>Poin: <span id="score">0</span></p>
-  <p>Level: <span id="level">1</span></p>
+<!-- HOW IT WORKS -->
+<section class="section" id="how" style="background: linear-gradient(180deg, var(--bg-base) 0%, var(--bg-surface) 50%, var(--bg-base) 100%)">
+  <div class="container">
+    <div style="text-align:center;margin-bottom:var(--space-3xl)">
+      <span class="section-tag">Cara Kerja</span>
+      <h2 class="section-title">Selesai dalam <span class="text-gradient">4 Langkah</span> Mudah</h2>
+    </div>
+    <div style="max-width:680px;margin:0 auto;display:flex;flex-direction:column;gap:1rem">
+      <div class="how-step reveal">
+        <div class="how-number">1</div>
+        <div>
+          <h3 style="margin-bottom:0.5rem">Daftar / Login</h3>
+          <p style="color:var(--text-secondary);font-size:0.95rem">Buat akun gratis atau login ke akunmu untuk mulai membuat laporan PKL.</p>
+        </div>
+      </div>
+      <div class="how-step reveal">
+        <div class="how-number">2</div>
+        <div>
+          <h3 style="margin-bottom:0.5rem">Isi Data Lengkap</h3>
+          <p style="color:var(--text-secondary);font-size:0.95rem">Isi form multi-step: data siswa, info perusahaan PKL, detail kegiatan harian, sampai kesimpulan.</p>
+        </div>
+      </div>
+      <div class="how-step reveal">
+        <div class="how-number">3</div>
+        <div>
+          <h3 style="margin-bottom:0.5rem">Pilih Paket & Bayar</h3>
+          <p style="color:var(--text-secondary);font-size:0.95rem">Pilih paket sesuai kebutuhan. Bayar via QRIS, transfer bank, atau dompet digital. Proses cepat!</p>
+        </div>
+      </div>
+      <div class="how-step reveal">
+        <div class="how-number">4</div>
+        <div>
+          <h3 style="margin-bottom:0.5rem">Download Laporan</h3>
+          <p style="color:var(--text-secondary);font-size:0.95rem">Laporan PKL lengkap & profesional siap download dalam format DOCX dan PDF. Selesai! <i data-lucide="party-popper"></i></p>
+        </div>
+      </div>
+    </div>
+    <div style="text-align:center;margin-top:var(--space-2xl)">
+      <a href="generate.html" class="btn btn-primary btn-lg" id="cta-mulai-sekarang"><i data-lucide="rocket"></i> Mulai Sekarang — Gratis!</a>
+    </div>
+  </div>
+</section>
+
+<!-- PRICING -->
+<section class="section" id="pricing">
+  <div class="container">
+    <div style="text-align:center;margin-bottom:var(--space-3xl)">
+      <span class="section-tag">Harga Paket</span>
+      <h2 class="section-title">Transparan, <span class="text-gradient">Terjangkau</span></h2>
+      <p class="section-subtitle" style="margin:0 auto">Tidak ada biaya tersembunyi. Bayar sekali, download sepuasnya!</p>
+    </div>
+    <div class="pricing-grid">
+      <!-- Basic -->
+      <div class="pricing-card reveal">
+        <div>
+          <div style="font-size:2rem;margin-bottom:0.5rem"><i data-lucide="file"></i></div>
+          <h3 style="font-family:var(--font-heading);font-size:1.3rem">Basic</h3>
+          <p style="color:var(--text-secondary);font-size:0.85rem;margin-top:0.25rem">Untuk kebutuhan dasar</p>
+        </div>
+        <div class="pricing-price">
+          <span class="pricing-amount text-gradient" style="font-size:2.5rem">Gratis</span>
+        </div>
+        <ul class="pricing-features">
+          <li><span class="check check-yes"><i data-lucide="check"></i></span> 1x Laporan PKL lengkap</li>
+          <li><span class="check check-yes"><i data-lucide="check"></i></span> Download PDF</li>
+          <li><span class="check check-yes"><i data-lucide="check"></i></span> Cukup nonton iklan 30 detik</li>
+          <li><span class="check check-no"><i data-lucide="x"></i></span> <span style="color:var(--text-muted)">Download DOCX</span></li>
+          <li><span class="check check-no"><i data-lucide="x"></i></span> <span style="color:var(--text-muted)">Revisi</span></li>
+        </ul>
+        <a href="generate.html?plan=basic" class="btn btn-outline btn-full" id="select-basic">Pilih Basic</a>
+      </div>
+
+      <!-- Pro (Featured) -->
+      <div class="pricing-card featured reveal">
+        <div class="pricing-popular"><span class="badge badge-primary"><i data-lucide="star"></i> Terpopuler</span></div>
+        <div>
+          <div style="font-size:2rem;margin-bottom:0.5rem"><i data-lucide="star"></i></div>
+          <h3 style="font-family:var(--font-heading);font-size:1.3rem">Pro</h3>
+          <p style="color:var(--text-secondary);font-size:0.85rem;margin-top:0.25rem">Paling banyak dipilih</p>
+        </div>
+        <div class="pricing-price">
+          <span class="pricing-currency">Rp</span>
+          <span class="pricing-amount text-gradient">30K</span>
+        </div>
+        <ul class="pricing-features">
+          <li><span class="check check-yes"><i data-lucide="check"></i></span> 1x Laporan PKL lengkap</li>
+          <li><span class="check check-yes"><i data-lucide="check"></i></span> Download PDF & DOCX</li>
+          <li><span class="check check-yes"><i data-lucide="check"></i></span> Tanpa Iklan (Proses instan)</li>
+          <li><span class="check check-yes"><i data-lucide="check"></i></span> Kustomisasi tinggi</li>
+          <li><span class="check check-yes"><i data-lucide="check"></i></span> Revisi laporan hingga 5x</li>
+        </ul>
+        <a href="generate.html?plan=pro" class="btn btn-primary btn-full" id="select-pro">Pilih Pro</a>
+      </div>
+
+      <!-- Premium -->
+      <div class="pricing-card reveal">
+        <div>
+          <div style="font-size:2rem;margin-bottom:0.5rem"><i data-lucide="crown"></i></div>
+          <h3 style="font-family:var(--font-heading);font-size:1.3rem">Premium</h3>
+          <p style="color:var(--text-secondary);font-size:0.85rem;margin-top:0.25rem">Untuk kebutuhan maksimal</p>
+        </div>
+        <div class="pricing-price">
+          <span class="pricing-currency">Rp</span>
+          <span class="pricing-amount text-gradient">50K</span>
+        </div>
+        <ul class="pricing-features">
+          <li><span class="check check-yes"><i data-lucide="check"></i></span> 3x Laporan PKL berbeda</li>
+          <li><span class="check check-yes"><i data-lucide="check"></i></span> Download PDF & DOCX</li>
+          <li><span class="check check-yes"><i data-lucide="check"></i></span> Tanpa Iklan (Proses instan)</li>
+          <li><span class="check check-yes"><i data-lucide="check"></i></span> Kustomisasi tinggi</li>
+          <li><span class="check check-yes"><i data-lucide="check"></i></span> Revisi laporan hingga 10x</li>
+        </ul>
+        <a href="generate.html?plan=premium" class="btn btn-outline btn-full" id="select-premium">Pilih Premium</a>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- TESTIMONIALS -->
+<section class="section" id="testimonials" style="background:linear-gradient(180deg,var(--bg-base) 0%,var(--bg-surface) 100%)">
+  <div class="container">
+    <div style="text-align:center;margin-bottom:var(--space-3xl)">
+      <span class="section-tag">Testimoni</span>
+      <h2 class="section-title">Apa Kata <span class="text-gradient">Mereka?</span></h2>
+    </div>
+    <div class="grid-3">
+      <div class="testimonial-card reveal">
+        <div class="testimonial-stars"><i data-lucide="star"></i><i data-lucide="star"></i><i data-lucide="star"></i><i data-lucide="star"></i><i data-lucide="star"></i></div>
+        <p class="testimonial-text">"Gila sih ini, laporan PKL gue yang biasanya butuh 2 minggu buat nulis selesai dalam 5 menit! Kualitasnya juga bagus banget, langsung acc sama guru pembimbing."</p>
+        <div class="testimonial-author">
+          <div class="testimonial-avatar">A</div>
+          <div class="testimonial-info">
+            <strong>Aldi Firmansyah</strong><br>
+            <small>Siswa SMK TKJ - Bandung</small>
+          </div>
+        </div>
+      </div>
+      <div class="testimonial-card reveal">
+        <div class="testimonial-stars"><i data-lucide="star"></i><i data-lucide="star"></i><i data-lucide="star"></i><i data-lucide="star"></i><i data-lucide="star"></i></div>
+        <p class="testimonial-text">"Recommended banget! Harganya murah, hasilnya pro. Laporan gue pakai template Pro, format-nya rapi dan isinya lengkap. Teman-teman gue langsung pada penasaran."</p>
+        <div class="testimonial-author">
+          <div class="testimonial-avatar" style="background:linear-gradient(135deg,#ec4899,#f59e0b)">S</div>
+          <div class="testimonial-info">
+            <strong>Sari Dewi</strong><br>
+            <small>Siswa SMK Akuntansi - Jakarta</small>
+          </div>
+        </div>
+      </div>
+      <div class="testimonial-card reveal">
+        <div class="testimonial-stars"><i data-lucide="star"></i><i data-lucide="star"></i><i data-lucide="star"></i><i data-lucide="star"></i><i data-lucide="star"></i></div>
+        <p class="testimonial-text">"Awalnya ragu, tapi setelah coba ternyata hasilnya melebihi ekspektasi. Laporan PKL gue langsung disetujui tanpa revisi sama sekali. 10/10!"</p>
+        <div class="testimonial-author">
+          <div class="testimonial-avatar" style="background:linear-gradient(135deg,#06b6d4,#22c55e)">R</div>
+          <div class="testimonial-info">
+            <strong>Rizky Nugroho</strong><br>
+            <small>Siswa SMK RPL - Surabaya</small>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- FAQ -->
+<section class="section" id="faq">
+  <div class="container">
+    <div style="text-align:center;margin-bottom:var(--space-3xl)">
+      <span class="section-tag">FAQ</span>
+      <h2 class="section-title">Pertanyaan yang <span class="text-gradient">Sering Ditanya</span></h2>
+    </div>
+    <div style="max-width:700px;margin:0 auto">
+      <div class="faq-item">
+        <div class="faq-question">Apakah laporan yang dihasilkan sudah sesuai standar sekolah? <span class="faq-icon">+</span></div>
+        <div class="faq-answer">Ya! Template laporan kami dibuat mengikuti standar umum laporan PKL SMK/SMA di Indonesia. Sudah mencakup 4 BAB lengkap: Pendahuluan, Profil Perusahaan, Kegiatan PKL, dan Penutup, plus Kata Pengantar dan Daftar Isi.</div>
+      </div>
+      <div class="faq-item">
+        <div class="faq-question">Berapa lama proses generate laporan? <span class="faq-icon">+</span></div>
+        <div class="faq-answer">Sangat cepat! Setelah pembayaran dikonfirmasi, laporan PKL lengkap kamu akan siap dalam hitungan detik. Tidak ada waktu tunggu yang lama.</div>
+      </div>
+      <div class="faq-item">
+        <div class="faq-question">Apa saja format yang bisa didownload? <span class="faq-icon">+</span></div>
+        <div class="faq-answer">Untuk paket Basic: PDF saja. Untuk paket Pro dan Premium: DOCX (Word, bisa diedit) dan PDF (siap cetak). Format DOCX sangat berguna jika kamu ingin melakukan penyesuaian lebih lanjut.</div>
+      </div>
+      <div class="faq-item">
+        <div class="faq-question">Apakah data saya aman? <span class="faq-icon">+</span></div>
+        <div class="faq-answer">Tentu! Data kamu disimpan secara lokal di browser-mu dan tidak dikirim ke server pihak ketiga. Privasi kamu adalah prioritas kami.</div>
+      </div>
+      <div class="faq-item">
+        <div class="faq-question">Bagaimana jika laporan tidak sesuai ekspektasi? <span class="faq-icon">+</span></div>
+        <div class="faq-answer">Paket Premium mendapat 2x hak revisi. Untuk paket Basic dan Pro, kamu bisa mengedit file DOCX sesuai kebutuhan. Kami juga selalu berusaha meningkatkan kualitas template kami.</div>
+      </div>
+      <div class="faq-item">
+        <div class="faq-question">Metode pembayaran apa saja yang diterima? <span class="faq-icon">+</span></div>
+        <div class="faq-answer">Kami menerima QRIS (semua e-wallet), Transfer Bank (BCA, Mandiri, BRI, BNI), dan Dompet Digital (DANA, OVO, GoPay, ShopeePay).</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- CTA SECTION -->
+<section class="section">
+  <div class="container">
+    <div style="text-align:center;padding:4rem 2rem;background:linear-gradient(135deg,rgba(124,58,237,0.15),rgba(6,182,212,0.1));border:1px solid rgba(124,58,237,0.3);border-radius:var(--radius-xl);position:relative;overflow:hidden">
+      <div style="position:absolute;inset:0;background:radial-gradient(ellipse at center,rgba(124,58,237,0.2) 0%,transparent 70%);pointer-events:none"></div>
+      <div style="position:relative">
+        <h2 style="font-size:clamp(2rem,4vw,3rem);font-weight:900;margin-bottom:1rem">Siap Buat Laporan PKL <span class="text-gradient">Sekarang?</span></h2>
+        <p style="color:var(--text-secondary);font-size:1.1rem;max-width:500px;margin:0 auto 2rem">Bergabung dengan 2.400+ siswa yang sudah mempercayakan laporan PKL mereka ke kami.</p>
+        <a href="generate.html" class="btn btn-primary btn-lg" id="cta-final"><i data-lucide="pen-line"></i> Buat Laporan PKL Saya</a>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- FOOTER -->
+<footer class="footer">
+  <div class="container">
+    <div class="footer-grid">
+      <div class="footer-brand">
+        <a href="index.html" class="navbar-logo" style="margin-bottom:1rem;display:inline-flex">
+          <div class="logo-icon"><i data-lucide="file-text"></i></div>
+          <span class="text-gradient">JokiLaporan</span><span style="color:var(--text-secondary)">.id</span>
+        </a>
+        <p>Platform terpercaya untuk generate laporan PKL otomatis dan instan. Dibuat dengan <i data-lucide="heart"></i> untuk siswa Indonesia.</p>
+      </div>
+      <div class="footer-col">
+        <h4>Layanan</h4>
+        <ul>
+          <li><a href="generate.html">Buat Laporan</a></li>
+          <li><a href="#pricing">Cek Harga</a></li>
+          <li><a href="#features">Fitur Kami</a></li>
+        </ul>
+      </div>
+      <div class="footer-col">
+        <h4>Bantuan</h4>
+        <ul>
+          <li><a href="#faq">FAQ</a></li>
+          <li><a href="#">Syarat & Ketentuan</a></li>
+          <li><a href="#">Kebijakan Privasi</a></li>
+        </ul>
+      </div>
+      <div class="footer-col">
+        <h4>Kontak</h4>
+        <ul>
+          <li><a href="#">WhatsApp Admin</a></li>
+          <li><a href="#">Email Support</a></li>
+          <li><a href="#">Instagram</a></li>
+        </ul>
+      </div>
+    </div>
+    <div class="footer-bottom">
+      <span>© 2025 JokiLaporan.id — Semua hak dilindungi</span>
+      <span>Dibuat dengan <i data-lucide="heart"></i> untuk pelajar Indonesia</span>
+    </div>
+  </div>
+</footer>
+
+<button class="scroll-top" title="Kembali ke atas">↑</button>
+
+<!-- LOGIN MODAL -->
+<div class="modal-overlay" id="loginModal">
+  <div class="modal">
+    <div class="modal-header">
+      <h3 class="modal-title"><i data-lucide="hand"></i> Masuk ke Akun</h3>
+      <button class="modal-close" onclick="closeModal('loginModal')">×</button>
+    </div>
+    <form onsubmit="handleLogin(event)">
+      <div class="form-group">
+        <label class="form-label">Email</label>
+        <input type="email" id="login-email" class="form-input" placeholder="email@contoh.com" required>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Password</label>
+        <input type="password" id="login-password" class="form-input" placeholder="••••••••" required>
+      </div>
+      <button type="submit" class="btn btn-primary btn-full btn-lg">Masuk</button>
+    </form>
+    <p style="text-align:center;margin-top:1.5rem;color:var(--text-secondary);font-size:0.9rem">
+      Belum punya akun? <button onclick="closeModal('loginModal');openModal('registerModal')" style="background:none;border:none;color:var(--primary-light);cursor:pointer;font-weight:600">Daftar sekarang</button>
+    </p>
+  </div>
 </div>
 
-<div id="result"></div>
+<!-- REGISTER MODAL -->
+<div class="modal-overlay" id="registerModal">
+  <div class="modal">
+    <div class="modal-header">
+      <h3 class="modal-title"><i data-lucide="rocket"></i> Buat Akun Gratis</h3>
+      <button class="modal-close" onclick="closeModal('registerModal')">×</button>
+    </div>
+    <form onsubmit="handleRegister(event)">
+      <div class="form-group">
+        <label class="form-label">Nama Lengkap</label>
+        <input type="text" id="reg-name" class="form-input" placeholder="Nama lengkap kamu" required>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Email</label>
+        <input type="email" id="reg-email" class="form-input" placeholder="email@contoh.com" required>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Password</label>
+        <input type="password" id="reg-password" class="form-input" placeholder="Min. 6 karakter" required>
+      </div>
+      <button type="submit" class="btn btn-primary btn-full btn-lg">Daftar Gratis</button>
+    </form>
+    <p style="text-align:center;margin-top:1.5rem;color:var(--text-secondary);font-size:0.9rem">
+      Sudah punya akun? <button onclick="closeModal('registerModal');openModal('loginModal')" style="background:none;border:none;color:var(--primary-light);cursor:pointer;font-weight:600">Masuk di sini</button>
+    </p>
+  </div>
+</div>
+
+<script src="scripts/app.js"></script>
 
 <script>
-let items = ["🍒","🍋","🍉","⭐","💎"];
-let score = localStorage.getItem("score") || 100;
-let level = localStorage.getItem("level") || 1;
-
-document.getElementById("score").innerText = score;
-document.getElementById("level").innerText = level;
-
-function playBeep(freq) {
-  let ctx = new (window.AudioContext || window.webkitAudioContext)();
-  let osc = ctx.createOscillator();
-  osc.type = "sine";
-  osc.frequency.value = freq;
-  osc.connect(ctx.destination);
-  osc.start();
-  setTimeout(() => osc.stop(), 100);
-}
-
-function spin() {
-  playBeep(300);
-
-  let interval = setInterval(() => {
-    let a = items[Math.floor(Math.random()*items.length)];
-    let b = items[Math.floor(Math.random()*items.length)];
-    let c = items[Math.floor(Math.random()*items.length)];
-    document.getElementById("slot").innerHTML = a+" "+b+" "+c;
-  }, 100);
-
-  setTimeout(() => {
-    clearInterval(interval);
-
-    let a = items[Math.floor(Math.random()*items.length)];
-    let b = items[Math.floor(Math.random()*items.length)];
-    let c = items[Math.floor(Math.random()*items.length)];
-
-    document.getElementById("slot").innerHTML = a+" "+b+" "+c;
-
-    let result = document.getElementById("result");
-
-    if (a===b && b===c) {
-      score += 50;
-      result.innerHTML = "🔥 JACKPOT!";
-      playBeep(800);
-    } else if (a===b || b===c || a===c) {
-      score += 10;
-      result.innerHTML = "✨ Menang kecil";
-    } else {
-      score -= 5;
-      result.innerHTML = "😢 Kalah";
-    }
-
-    level = Math.floor(score / 100) + 1;
-
-    localStorage.setItem("score", score);
-    localStorage.setItem("level", level);
-
-    document.getElementById("score").innerText = score;
-    document.getElementById("level").innerText = level;
-
-  }, 1500);
-}
-
-function daily() {
-  let last = localStorage.getItem("daily");
-  let today = new Date().getDate();
-
-  if (last == today) {
-    alert("Sudah ambil hari ini!");
-  } else {
-    score += 20;
-    localStorage.setItem("daily", today);
-    localStorage.setItem("score", score);
-    document.getElementById("score").innerText = score;
-    alert("🎁 +20 poin!");
+  if (typeof lucide !== 'undefined') {
+    lucide.createIcons();
   }
-}
 </script>
-
 </body>
+
 </html>

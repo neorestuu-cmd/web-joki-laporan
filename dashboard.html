@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Dashboard Akun — JokiLaporan.id</title>
+  <link rel="stylesheet" href="styles/main.css">
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <style>
+    .dashboard-layout { display: grid; grid-template-columns: 300px 1fr; gap: 2rem; align-items: start; }
+    @media (max-width: 900px) { .dashboard-layout { grid-template-columns: 1fr; } }
+    .history-item { padding: 1.25rem; border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; gap: 1rem; flex-wrap: wrap; }
+    .history-item:last-child { border-bottom: none; }
+    .history-icon { width: 48px; height: 48px; background: rgba(37,99,235,0.1); border-radius: var(--radius-md); display: flex; align-items: center; justify-content: center; color: var(--primary-light); }
+  </style>
+</head>
+<body>
+
+<nav class="navbar">
+  <div class="container">
+    <div class="navbar-inner">
+      <a href="index.html" class="navbar-logo">
+        <div class="logo-icon"><i data-lucide="file-text"></i></div>
+        <span class="text-gradient">JokiLaporan</span><span style="color:var(--text-secondary)">.id</span>
+      </a>
+      <ul class="navbar-links">
+        <li><a href="index.html#pricing">Harga</a></li>
+        <li><a href="index.html#faq">FAQ</a></li>
+      </ul>
+      <div class="navbar-actions">
+        <!-- Will be replaced by app.js -->
+      </div>
+    </div>
+  </div>
+</nav>
+
+<div class="page-header" style="padding-top:120px; padding-bottom:3rem">
+  <div class="container">
+    <h1 class="page-header-title">Halo, <span class="text-gradient" id="dash-name">User</span>! 👋</h1>
+    <p class="page-header-subtitle">Selamat datang di pusat kendali akun Anda.</p>
+  </div>
+</div>
+
+<div class="container" style="padding-bottom: 5rem">
+  <div class="dashboard-layout">
+    <!-- Sidebar Info -->
+    <div>
+      <div class="card" style="margin-bottom:1.5rem">
+        <h3 style="margin-bottom:1.5rem;font-size:1.1rem;display:flex;align-items:center;gap:0.5rem"><i data-lucide="shield"></i> Status Paket</h3>
+        
+        <div style="background:var(--bg-surface);padding:1rem;border-radius:var(--radius-md);margin-bottom:1rem;border:1px solid var(--border)">
+          <div style="font-size:0.8rem;color:var(--text-secondary);text-transform:uppercase;letter-spacing:1px;font-weight:700;margin-bottom:0.25rem">Paket Aktif</div>
+          <div style="font-size:1.8rem;font-weight:800;font-family:var(--font-heading)" id="dash-plan-name" class="text-gradient">PRO</div>
+        </div>
+
+        <div style="display:flex;justify-content:space-between;align-items:center;padding-bottom:1rem;border-bottom:1px solid var(--border);margin-bottom:1rem">
+          <span style="color:var(--text-secondary);font-size:0.9rem">Sisa Kuota Revisi</span>
+          <strong style="font-size:1.1rem" id="dash-revisions">4x</strong>
+        </div>
+
+        <a href="index.html#pricing" class="btn btn-outline btn-full">Upgrade Paket</a>
+      </div>
+
+      <div class="card">
+        <button class="btn btn-danger btn-full" onclick="APP.logout()"><i data-lucide="log-out"></i> Keluar (Logout)</button>
+      </div>
+    </div>
+
+    <!-- Main History -->
+    <div class="card">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:1.5rem">
+        <h3 style="font-size:1.2rem;display:flex;align-items:center;gap:0.5rem"><i data-lucide="clock"></i> Riwayat Laporan</h3>
+        <a href="generate.html" class="btn btn-primary btn-sm"><i data-lucide="plus"></i> Buat Baru</a>
+      </div>
+      
+      <div style="background:var(--bg-surface);border:1px solid var(--border);border-radius:var(--radius-lg);overflow:hidden" id="history-container">
+        <!-- Injected via JS -->
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="scripts/app.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+  APP.init(); // Setup navbar
+
+  const user = APP.getUser();
+  if (!user) {
+    window.location.href = 'index.html';
+    return;
+  }
+
+  document.getElementById('dash-name').textContent = user.name.split(' ')[0];
+  document.getElementById('dash-plan-name').textContent = (user.plan || 'BASIC').toUpperCase();
+  
+  if (user.plan === 'basic') {
+    document.getElementById('dash-revisions').textContent = '0 (Beli Paket Pro)';
+  } else {
+    document.getElementById('dash-revisions').textContent = (user.revisions || 0) + 'x';
+  }
+
+  const orders = APP.getOrders().reverse(); // Newest first
+  const container = document.getElementById('history-container');
+  
+  if (orders.length === 0) {
+    container.innerHTML = `
+      <div style="padding:3rem;text-align:center;color:var(--text-secondary)">
+        <div style="margin-bottom:1rem"><i data-lucide="inbox" style="width:48px;height:48px;opacity:0.5"></i></div>
+        Belum ada laporan yang dibuat.<br><a href="generate.html" style="color:var(--primary-light);text-decoration:none;font-weight:600;margin-top:0.5rem;display:inline-block">Buat laporan pertama Anda!</a>
+      </div>
+    `;
+  } else {
+    let html = '';
+    orders.forEach(o => {
+      const dateStr = APP.formatDate(o.createdAt);
+      const perusahaan = o.formData?.namaPerusahaan || 'Tanpa Nama';
+      html += `
+        <div class="history-item">
+          <div style="display:flex;align-items:center;gap:1rem">
+            <div class="history-icon"><i data-lucide="file-check-2"></i></div>
+            <div>
+              <div style="font-weight:700;font-size:1.05rem;margin-bottom:0.25rem">Laporan PKL - ${perusahaan}</div>
+              <div style="font-size:0.85rem;color:var(--text-secondary)">${dateStr} • ID: ${o.id}</div>
+            </div>
+          </div>
+          <div style="display:flex;gap:0.5rem">
+            <a href="result.html" class="btn btn-primary btn-sm"><i data-lucide="download"></i> Buka Laporan</a>
+          </div>
+        </div>
+      `;
+    });
+    container.innerHTML = html;
+  }
+
+  if (typeof lucide !== 'undefined') lucide.createIcons();
+});
+</script>
+</body>
+</html>

@@ -1,0 +1,179 @@
+﻿<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Pembayaran — JokiLaporan.id</title>
+  <link rel="stylesheet" href="styles/main.css">
+  <style>
+    .pay-layout { display: grid; grid-template-columns: 1fr 340px; gap: 2rem; align-items: start; }
+    @media (max-width: 900px) { .pay-layout { grid-template-columns: 1fr; } }
+    .verify-screen, .success-screen { display: none; text-align: center; padding: 3rem 2rem; }
+    .verify-progress-track { height: 8px; background: var(--border); border-radius: 4px; overflow: hidden; margin: 2rem 0; }
+    #verify-progress { height: 100%; width: 0; background: var(--grad-primary); border-radius: 4px; transition: width 0.8s ease; }
+    .success-checkmark { width: 100px; height: 100px; border-radius: 50%; background: rgba(34,197,94,0.15); border: 3px solid rgba(34,197,94,0.4); display: flex; align-items: center; justify-content: center; font-size: 3rem; margin: 0 auto 2rem; animation: popIn 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
+    @keyframes popIn { from { transform: scale(0); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+    .redirect-bar { height: 4px; background: var(--border); border-radius: 2px; margin-top: 1rem; overflow: hidden; }
+    .redirect-progress { height: 100%; width: 100%; background: var(--grad-primary); border-radius: 2px; animation: shrink 3s linear forwards; transform-origin: left; }
+    @keyframes shrink { from { width: 100%; } to { width: 0%; } }
+  </style>
+
+  <!-- Lucide Icons -->
+  <script src="https://unpkg.com/lucide@latest"></script>
+</head>
+<body>
+<nav class="navbar">
+  <div class="container">
+    <div class="navbar-inner">
+      <a href="index.html" class="navbar-logo">
+        <div class="logo-icon"><i data-lucide="file-text"></i></div>
+        <span class="text-gradient">JokiLaporan</span><span style="color:var(--text-secondary)">.id</span>
+      </a>
+      <div class="navbar-actions" id="payment-nav-steps" style="color:var(--text-secondary);font-size:0.9rem">
+        <span class="badge badge-primary"><i data-lucide="credit-card"></i> Halaman Pembayaran</span>
+      </div>
+    </div>
+  </div>
+</nav>
+
+<div class="page-header" style="padding-bottom:2rem">
+  <div class="container">
+    <h1 class="page-header-title">Selesaikan <span class="text-gradient">Pembayaran</span></h1>
+    <p class="page-header-subtitle">Konfirmasi pesanan dan pilih metode pembayaran</p>
+  </div>
+</div>
+
+<div class="container" style="padding-bottom:4rem">
+  <!-- PAYMENT FORM -->
+  <div id="payment-form">
+    <div class="pay-layout">
+      <!-- LEFT: Payment Methods -->
+      <div>
+        <div class="card" style="margin-bottom:1.5rem">
+          <h2 style="margin-bottom:1.5rem;font-size:1.3rem"><i data-lucide="credit-card"></i> Pilih Metode Pembayaran</h2>
+
+          <div class="payment-method" id="pm-qris" onclick="PAYMENT.selectMethod(this,'qris')">
+            <div class="payment-radio"></div>
+            <div style="font-size:1.5rem"><i data-lucide="smartphone"></i></div>
+            <div>
+              <strong>QRIS (Semua E-Wallet)</strong>
+              <div style="font-size:0.85rem;color:var(--text-secondary)">GoPay, OVO, Dana, ShopeePay, LinkAja, dll.</div>
+            </div>
+          </div>
+
+          <div class="payment-method" id="pm-bca" onclick="PAYMENT.selectMethod(this,'bca')">
+            <div class="payment-radio"></div>
+            <div style="font-size:1.5rem"><i data-lucide="landmark"></i></div>
+            <div>
+              <strong>Transfer BCA</strong>
+              <div style="font-size:0.85rem;color:var(--text-secondary)">Transfer via ATM, M-Banking, atau I-Banking</div>
+            </div>
+          </div>
+
+          <div class="payment-method" id="pm-mandiri" onclick="PAYMENT.selectMethod(this,'mandiri')">
+            <div class="payment-radio"></div>
+            <div style="font-size:1.5rem"><i data-lucide="building-2"></i></div>
+            <div>
+              <strong>Transfer Mandiri</strong>
+              <div style="font-size:0.85rem;color:var(--text-secondary)">Transfer via ATM, Livin by Mandiri</div>
+            </div>
+          </div>
+
+          <div class="payment-method" id="pm-dana" onclick="PAYMENT.selectMethod(this,'dana')">
+            <div class="payment-radio"></div>
+            <div style="font-size:1.5rem"><i data-lucide="heart" fill="currentColor"></i></div>
+            <div>
+              <strong>DANA</strong>
+              <div style="font-size:0.85rem;color:var(--text-secondary)">Transfer langsung ke akun DANA</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Payment Detail Info -->
+        <div id="payment-detail-info" style="display:none;margin-bottom:1.5rem;background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius-xl);padding:1.5rem;animation:fadeInUp 0.3s ease"></div>
+
+        <div class="card" style="background:rgba(245,158,11,0.08);border-color:rgba(245,158,11,0.3)">
+          <p style="font-size:0.9rem;color:#fcd34d">
+            <i data-lucide="alert-triangle"></i> <strong>Ini adalah simulasi pembayaran</strong> — tidak ada transaksi nyata yang terjadi. Klik "Konfirmasi Pembayaran" untuk melanjutkan ke proses generate laporan.
+          </p>
+        </div>
+
+        <button class="btn btn-primary btn-full btn-lg" style="margin-top:1.5rem" onclick="PAYMENT.confirmPayment()" id="btn-confirm-pay">
+          <i data-lucide="check-circle-2"></i> Konfirmasi Pembayaran
+        </button>
+      </div>
+
+      <!-- RIGHT: Order Summary -->
+      <div>
+        <div class="card" style="position:sticky;top:100px">
+          <h3 style="margin-bottom:1.5rem;font-size:1.1rem"><i data-lucide="clipboard-list"></i> Ringkasan Pesanan</h3>
+          <div style="text-align:center;padding:1.5rem 0;border-bottom:1px solid var(--border);margin-bottom:1.5rem">
+            <div style="font-size:3rem;margin-bottom:0.5rem" id="summary-plan-icon"><i data-lucide="star"></i></div>
+            <div style="font-family:var(--font-heading);font-size:1.2rem;font-weight:700;margin-bottom:0.25rem" id="summary-plan-name">Pro</div>
+            <div style="font-size:0.85rem;color:var(--text-secondary)">Laporan PKL</div>
+          </div>
+          <ul id="summary-features" style="list-style:none;display:flex;flex-direction:column;gap:0.75rem;margin-bottom:1.5rem;font-size:0.9rem"></ul>
+          <div style="padding:1rem;background:var(--bg-glass);border-radius:var(--radius-md);border:1px solid var(--border)">
+            <div style="display:flex;justify-content:space-between;margin-bottom:0.5rem;color:var(--text-secondary);font-size:0.9rem">
+              <span>Subtotal</span>
+              <span id="summary-price">-</span>
+            </div>
+            <div style="display:flex;justify-content:space-between;margin-bottom:0.5rem;color:var(--text-secondary);font-size:0.9rem">
+              <span>Biaya Platform</span>
+              <span style="color:#86efac">Gratis</span>
+            </div>
+            <div style="height:1px;background:var(--border);margin:0.75rem 0"></div>
+            <div style="display:flex;justify-content:space-between;font-weight:700;font-size:1.1rem">
+              <span>Total</span>
+              <span class="text-gradient" id="summary-total">-</span>
+            </div>
+          </div>
+          <div style="margin-top:1rem;display:flex;align-items:center;gap:0.5rem;font-size:0.8rem;color:var(--text-muted)">
+            <span><i data-lucide="lock"></i></span> Pembayaran Aman & Terenkripsi
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- VERIFICATION SCREEN -->
+  <div id="payment-verify" class="verify-screen">
+    <div style="max-width:400px;margin:0 auto">
+      <div style="font-size:4rem;margin-bottom:1rem;animation:pulse 1s ease infinite"><i data-lucide="hourglass"></i></div>
+      <h2 style="font-size:2rem;font-weight:800;margin-bottom:1rem">Memverifikasi Pembayaran</h2>
+      <p style="color:var(--text-secondary);margin-bottom:2rem">Sistem sedang memverifikasi pembayaranmu. Tunggu sebentar...</p>
+      <div class="verify-progress-track">
+        <div id="verify-progress"></div>
+      </div>
+      <p style="font-size:3rem;font-weight:800;margin:1rem 0" id="countdown-num" style="background:var(--grad-primary);-webkit-background-clip:text;-webkit-text-fill-color:transparent">15</p>
+      <p style="color:var(--text-muted);font-size:0.9rem">detik lagi...</p>
+    </div>
+  </div>
+
+  <!-- SUCCESS SCREEN -->
+  <div id="payment-success" class="success-screen">
+    <div style="max-width:400px;margin:0 auto">
+      <div class="success-checkmark"><i data-lucide="check-circle-2"></i></div>
+      <h2 style="font-size:2rem;font-weight:800;margin-bottom:1rem">Pembayaran Berhasil!</h2>
+      <p style="color:var(--text-secondary);margin-bottom:1rem">Laporan PKL kamu sedang digenerate. Kamu akan diarahkan ke halaman download secara otomatis.</p>
+      <div style="background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius-lg);padding:1rem;margin-bottom:1.5rem">
+        <div style="font-size:0.8rem;color:var(--text-muted);margin-bottom:0.25rem">ID Pesanan:</div>
+        <div style="font-weight:700;color:var(--primary-light)" id="success-order-id">-</div>
+      </div>
+      <div class="redirect-bar"><div class="redirect-progress"></div></div>
+      <p style="font-size:0.85rem;color:var(--text-muted);margin-top:0.75rem">Mengarahkan ke halaman download...</p>
+    </div>
+  </div>
+</div>
+
+<script src="scripts/app.js"></script>
+<script src="scripts/payment.js"></script>
+
+<script>
+  if (typeof lucide !== 'undefined') {
+    lucide.createIcons();
+  }
+</script>
+</body>
+
+</html>
