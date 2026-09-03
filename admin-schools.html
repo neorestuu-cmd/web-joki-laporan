@@ -1,0 +1,370 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Kelola Sekolah — Admin JokiLaporan.id</title>
+  <link rel="stylesheet" href="styles/main.css">
+  <script src="https://unpkg.com/lucide@latest"></script>
+</head>
+<body>
+
+<nav class="navbar" style="position:sticky;z-index:100;border-bottom:1px solid var(--border-primary)">
+  <div class="container" style="max-width:100%">
+    <div class="navbar-inner">
+      <a href="admin.html" class="navbar-logo">
+        <div class="logo-icon" style="background:#000;color:var(--primary-light)"><i data-lucide="shield"></i></div>
+        <span class="text-gradient">Admin Panel</span>
+      </a>
+      <div class="navbar-actions" style="display:flex;align-items:center;gap:1rem">
+        <span class="badge badge-primary">Mode Admin</span>
+        <button onclick="APP.logout()" class="btn btn-outline btn-sm">Logout</button>
+      </div>
+    </div>
+  </div>
+</nav>
+
+<div class="admin-layout">
+  <!-- SIDEBAR -->
+  <aside class="admin-sidebar">
+    <div class="admin-sidebar-title">Menu Utama</div>
+    <a href="admin.html" class="admin-nav-item"><i data-lucide="layout-dashboard"></i> Dashboard</a>
+    <a href="admin-schools.html" class="admin-nav-item active"><i data-lucide="school"></i> Data Sekolah & Jurusan</a>
+    <a href="admin-templates.html" class="admin-nav-item"><i data-lucide="layout-template"></i> Engine Template</a>
+    
+    <div class="admin-sidebar-title" style="margin-top:1.5rem">Penjualan & User</div>
+    <a href="admin-plans.html" class="admin-nav-item"><i data-lucide="credit-card"></i> Paket & Harga</a>
+    <a href="admin-users.html" class="admin-nav-item"><i data-lucide="users"></i> Pengguna</a>
+  </aside>
+  
+  <!-- CONTENT -->
+  <main class="admin-content">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:2rem">
+      <div>
+        <h1 style="font-size:1.8rem;font-weight:800;margin-bottom:0.25rem">Kelola Data Sekolah</h1>
+        <p style="color:var(--text-secondary)">Tambahkan sekolah dan jurusan agar muncul di opsi pilihan siswa</p>
+      </div>
+      <div>
+        <button class="btn btn-primary" onclick="openModal('modalSchool')"><i data-lucide="plus"></i> Tambah Sekolah</button>
+      </div>
+    </div>
+    
+    <div class="card" style="margin-bottom:2rem">
+      <div style="overflow-x:auto">
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>ID</th>
+              <th>Nama Sekolah</th>
+              <th>Kota / Provinsi</th>
+              <th>Jumlah Jurusan</th>
+              <th>Status</th>
+              <th style="text-align:right">Aksi</th>
+            </tr>
+          </thead>
+          <tbody id="school-list">
+            <!-- Rendered by JS -->
+          </tbody>
+        </table>
+      </div>
+    </div>
+    
+    <!-- Departments Section -->
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:1rem;margin-top:3rem">
+      <h2 style="font-size:1.4rem;font-weight:700">Jurusan Sekolah</h2>
+      <select class="form-select" style="width:250px" id="filter-school" onchange="loadDepartments()">
+        <option value="">Semua Sekolah</option>
+      </select>
+    </div>
+    
+    <div class="card">
+      <div style="margin-bottom:1rem;text-align:right">
+        <button class="btn btn-outline btn-sm" onclick="openDeptModal()"><i data-lucide="plus"></i> Tambah Jurusan</button>
+      </div>
+      <div style="overflow-x:auto">
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>Nama Jurusan</th>
+              <th>Singkatan</th>
+              <th>Sekolah</th>
+              <th>Template ID</th>
+              <th style="text-align:right">Aksi</th>
+            </tr>
+          </thead>
+          <tbody id="dept-list">
+            <!-- Rendered by JS -->
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </main>
+</div>
+
+<!-- Modal School -->
+<div class="modal-overlay" id="modalSchool">
+  <div class="modal">
+    <div class="modal-header">
+      <h3 class="modal-title"><i data-lucide="school"></i> <span id="modal-school-title">Tambah Sekolah</span></h3>
+      <button class="modal-close" onclick="closeModal('modalSchool')">×</button>
+    </div>
+    <form id="form-school" onsubmit="saveSchool(event)">
+      <input type="hidden" id="sch-id">
+      <div class="form-group" style="margin-bottom:1rem">
+        <label class="form-label">Nama Sekolah *</label>
+        <input type="text" id="sch-name" class="form-input" required>
+      </div>
+      <div class="form-group" style="margin-bottom:1rem">
+        <label class="form-label">Alamat Lengkap</label>
+        <textarea id="sch-address" class="form-textarea" rows="2"></textarea>
+      </div>
+      <div class="form-row" style="margin-bottom:1.5rem">
+        <div class="form-group">
+          <label class="form-label">Kota *</label>
+          <input type="text" id="sch-city" class="form-input" required>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Provinsi *</label>
+          <input type="text" id="sch-province" class="form-input" required>
+        </div>
+      </div>
+      <div style="display:flex;justify-content:flex-end;gap:0.75rem">
+        <button type="button" class="btn btn-outline" onclick="closeModal('modalSchool')">Batal</button>
+        <button type="submit" class="btn btn-primary">Simpan</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- Modal Dept -->
+<div class="modal-overlay" id="modalDept">
+  <div class="modal">
+    <div class="modal-header">
+      <h3 class="modal-title"><i data-lucide="layers"></i> <span id="modal-dept-title">Tambah Jurusan</span></h3>
+      <button class="modal-close" onclick="closeModal('modalDept')">×</button>
+    </div>
+    <form id="form-dept" onsubmit="saveDept(event)">
+      <input type="hidden" id="dep-id">
+      
+      <div class="form-group" style="margin-bottom:1rem">
+        <label class="form-label">Pilih Sekolah *</label>
+        <select id="dep-school" class="form-select" required></select>
+      </div>
+      
+      <div class="form-row" style="margin-bottom:1rem">
+        <div class="form-group">
+          <label class="form-label">Nama Jurusan *</label>
+          <input type="text" id="dep-name" class="form-input" required>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Singkatan *</label>
+          <input type="text" id="dep-short" class="form-input" placeholder="Misal: TKJ" required>
+        </div>
+      </div>
+      
+      <div class="form-group" style="margin-bottom:1.5rem">
+        <label class="form-label">Pilih Template Laporan *</label>
+        <select id="dep-template" class="form-select" required></select>
+        <div class="form-hint">Template menentukan format pertanyaan di wizard</div>
+      </div>
+      
+      <div style="display:flex;justify-content:flex-end;gap:0.75rem">
+        <button type="button" class="btn btn-outline" onclick="closeModal('modalDept')">Batal</button>
+        <button type="submit" class="btn btn-primary">Simpan</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<script src="scripts/app.js"></script>
+<script src="scripts/db.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+  if (!APP.getUser() || (APP.getUser().role !== 'admin' && APP.getUser().role !== 'superadmin')) {
+    window.location.href = 'index.html';
+    return;
+  }
+  
+  loadSchools();
+  loadDepartments();
+  populateDropdowns();
+  if (typeof lucide !== 'undefined') lucide.createIcons();
+});
+
+function loadSchools() {
+  const schools = DB.schools.getAll();
+  const depts = DB.departments.getAll();
+  
+  const tbody = document.getElementById('school-list');
+  tbody.innerHTML = schools.map(s => {
+    const deptCount = depts.filter(d => d.schoolId === s.id).length;
+    return `
+    <tr>
+      <td style="font-family:monospace;font-size:0.8rem">${s.id}</td>
+      <td style="font-weight:600">${s.name}</td>
+      <td>${s.city}, ${s.province}</td>
+      <td>${deptCount} Jurusan</td>
+      <td><span class="badge ${s.active ? 'badge-success' : 'badge-neutral'}">${s.active ? 'Aktif' : 'Nonaktif'}</span></td>
+      <td style="text-align:right">
+        <button class="btn btn-ghost btn-sm" onclick="editSchool('${s.id}')"><i data-lucide="edit"></i> Edit</button>
+        ${s.id !== 'sch_custom' ? `<button class="btn btn-ghost btn-sm" onclick="deleteSchool('${s.id}')" style="color:#fca5a5"><i data-lucide="trash-2"></i></button>` : ''}
+      </td>
+    </tr>
+  `}).join('');
+  
+  if (typeof lucide !== 'undefined') lucide.createIcons();
+}
+
+function loadDepartments() {
+  const filterId = document.getElementById('filter-school').value;
+  let depts = DB.departments.getAll();
+  
+  if (filterId) {
+    depts = depts.filter(d => d.schoolId === filterId);
+  }
+  
+  const schools = DB.schools.getAll();
+  
+  const tbody = document.getElementById('dept-list');
+  tbody.innerHTML = depts.map(d => {
+    const school = schools.find(s => s.id === d.schoolId);
+    const schName = school ? school.name : '-';
+    return `
+    <tr>
+      <td style="font-weight:600">${d.name}</td>
+      <td><span class="badge badge-neutral">${d.shortName}</span></td>
+      <td>${schName}</td>
+      <td style="font-family:monospace;font-size:0.8rem">${d.templateId}</td>
+      <td style="text-align:right">
+        <button class="btn btn-ghost btn-sm" onclick="editDept('${d.id}')"><i data-lucide="edit"></i> Edit</button>
+        ${d.id !== 'dep_generic' ? `<button class="btn btn-ghost btn-sm" onclick="deleteDept('${d.id}')" style="color:#fca5a5"><i data-lucide="trash-2"></i></button>` : ''}
+      </td>
+    </tr>
+  `}).join('');
+  
+  if (typeof lucide !== 'undefined') lucide.createIcons();
+}
+
+function populateDropdowns() {
+  const schools = DB.schools.getAll().filter(s => s.id !== 'sch_custom');
+  const tpls = DB.templates.getAll();
+  
+  // Filter school
+  const filterEl = document.getElementById('filter-school');
+  filterEl.innerHTML = '<option value="">Semua Sekolah</option>' + 
+    schools.map(s => `<option value="${s.id}">${s.name}</option>`).join('');
+    
+  // Modal school select
+  document.getElementById('dep-school').innerHTML = '<option value="">-- Pilih Sekolah --</option>' + 
+    schools.map(s => `<option value="${s.id}">${s.name}</option>`).join('');
+    
+  // Modal template select
+  document.getElementById('dep-template').innerHTML = '<option value="">-- Pilih Template --</option>' + 
+    tpls.map(t => `<option value="${t.id}">${t.name}</option>`).join('');
+}
+
+// School CRUD
+function editSchool(id) {
+  const s = DB.schools.getById(id);
+  if(!s) return;
+  document.getElementById('modal-school-title').textContent = 'Edit Sekolah';
+  document.getElementById('sch-id').value = s.id;
+  document.getElementById('sch-name').value = s.name;
+  document.getElementById('sch-address').value = s.address;
+  document.getElementById('sch-city').value = s.city;
+  document.getElementById('sch-province').value = s.province;
+  openModal('modalSchool');
+}
+
+function saveSchool(e) {
+  e.preventDefault();
+  const id = document.getElementById('sch-id').value;
+  const data = {
+    name: document.getElementById('sch-name').value,
+    address: document.getElementById('sch-address').value,
+    city: document.getElementById('sch-city').value,
+    province: document.getElementById('sch-province').value,
+    active: true
+  };
+  
+  if (id) {
+    DB.schools.update(id, data);
+    APP.notify('Sekolah diperbarui', 'success');
+  } else {
+    DB.schools.create(data);
+    APP.notify('Sekolah ditambahkan', 'success');
+  }
+  
+  closeModal('modalSchool');
+  loadSchools();
+  populateDropdowns();
+}
+
+function deleteSchool(id) {
+  APP.confirm('Hapus sekolah ini? Data jurusan yang terkait juga akan terpengaruh.', () => {
+    DB.schools.delete(id);
+    APP.notify('Sekolah dihapus', 'info');
+    loadSchools();
+    loadDepartments();
+    populateDropdowns();
+  });
+}
+
+// Dept CRUD
+function openDeptModal() {
+  document.getElementById('modal-dept-title').textContent = 'Tambah Jurusan';
+  document.getElementById('form-dept').reset();
+  document.getElementById('dep-id').value = '';
+  // Auto select school if filter is active
+  const filterId = document.getElementById('filter-school').value;
+  if(filterId) document.getElementById('dep-school').value = filterId;
+  openModal('modalDept');
+}
+
+function editDept(id) {
+  const d = DB.departments.getById(id);
+  if(!d) return;
+  document.getElementById('modal-dept-title').textContent = 'Edit Jurusan';
+  document.getElementById('dep-id').value = d.id;
+  document.getElementById('dep-school').value = d.schoolId;
+  document.getElementById('dep-name').value = d.name;
+  document.getElementById('dep-short').value = d.shortName;
+  document.getElementById('dep-template').value = d.templateId;
+  openModal('modalDept');
+}
+
+function saveDept(e) {
+  e.preventDefault();
+  const id = document.getElementById('dep-id').value;
+  const data = {
+    schoolId: document.getElementById('dep-school').value,
+    name: document.getElementById('dep-name').value,
+    shortName: document.getElementById('dep-short').value,
+    templateId: document.getElementById('dep-template').value,
+    active: true
+  };
+  
+  if (id) {
+    DB.departments.update(id, data);
+    APP.notify('Jurusan diperbarui', 'success');
+  } else {
+    DB.departments.create(data);
+    APP.notify('Jurusan ditambahkan', 'success');
+  }
+  
+  closeModal('modalDept');
+  loadSchools(); // update count
+  loadDepartments();
+}
+
+function deleteDept(id) {
+  APP.confirm('Hapus jurusan ini?', () => {
+    DB.departments.delete(id);
+    APP.notify('Jurusan dihapus', 'info');
+    loadSchools();
+    loadDepartments();
+  });
+}
+</script>
+</body>
+</html>

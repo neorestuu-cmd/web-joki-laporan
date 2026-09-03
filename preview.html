@@ -1,0 +1,533 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Live Preview Laporan — JokiLaporan.id</title>
+  <link rel="stylesheet" href="styles/main.css">
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <style>
+    body { background: #e5e7eb; color: #1a1a1a; overflow: hidden; margin: 0; padding: 0; }
+    
+    .preview-layout {
+      display: grid;
+      grid-template-columns: 300px 1fr;
+      height: 100vh;
+      overflow: hidden;
+    }
+    
+    /* SIDEBAR NAV */
+    .preview-nav-sidebar {
+      background: #111118;
+      border-right: 1px solid var(--border);
+      display: flex;
+      flex-direction: column;
+      height: 100%;
+      color: white;
+    }
+    .preview-header {
+      padding: 1.25rem 1.5rem;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+    }
+    .nav-list {
+      flex: 1;
+      overflow-y: auto;
+      padding: 1rem;
+      display: flex;
+      flex-direction: column;
+      gap: 0.3rem;
+    }
+    .nav-item {
+      padding: 0.6rem 1rem;
+      border-radius: var(--radius-md);
+      cursor: pointer;
+      font-size: 0.82rem;
+      font-weight: 500;
+      color: var(--text-secondary);
+      transition: all var(--transition-fast);
+      display: flex;
+      align-items: center;
+      gap: 0.6rem;
+    }
+    .nav-item svg { width: 14px; height: 14px; flex-shrink:0; }
+    .nav-item:hover { background: var(--bg-glass); color: var(--text-primary); }
+    .nav-item.active {
+      background: var(--primary);
+      color: white;
+      box-shadow: var(--shadow-sm);
+    }
+    .preview-actions {
+      padding: 1.25rem;
+      border-top: 1px solid var(--border);
+    }
+
+    /* PREVIEW AREA */
+    .preview-content-area {
+      background: #cfd3d8;
+      overflow-y: auto;
+      padding: 2rem;
+      display: flex;
+      justify-content: center;
+      align-items: flex-start;
+    }
+    .report-page-preview {
+      width: 210mm;
+      min-height: 297mm;
+      background: white;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+      font-family: 'Times New Roman', Times, serif;
+      font-size: 12pt;
+      line-height: 1.5;
+      color: #000;
+      box-sizing: border-box;
+      /* Default padding, overridden per section */
+      padding: 2.5cm 2cm 2cm 3cm;
+    }
+
+    @media (max-width: 900px) {
+      .preview-layout { grid-template-columns: 220px 1fr; }
+      .report-page-preview { width: 100%; min-height: auto; }
+    }
+    @media (max-width: 768px) {
+      .preview-layout { grid-template-columns: 1fr; grid-template-rows: auto 1fr; }
+      .preview-nav-sidebar { height: auto; max-height: 200px; }
+      .nav-list { padding: 0.5rem; flex-direction: row; flex-wrap: wrap; }
+      .nav-item { width: calc(50% - 0.25rem); padding: 0.4rem 0.5rem; font-size:0.75rem; }
+    }
+    @media print {
+      body * { visibility: hidden; }
+      .preview-nav-sidebar, .preview-actions, #edit-toolbar { display: none !important; }
+      .preview-layout { display: block; }
+      .preview-content-area { 
+        background: white; 
+        padding: 0; 
+        overflow: visible; 
+      }
+      .report-page-preview, .report-page-preview * { visibility: visible; }
+      .report-page-preview {
+        position: absolute;
+        left: 0;
+        top: 0;
+        width: 100%;
+        min-height: auto;
+        box-shadow: none;
+        margin: 0;
+      }
+    }
+  </style>
+</head>
+<body>
+
+<div class="preview-layout">
+  <!-- SIDEBAR NAVIGATION -->
+  <div class="preview-nav-sidebar">
+    <div class="preview-header">
+      <button onclick="window.close()" class="btn btn-ghost" style="padding:0.4rem;color:white" title="Tutup">
+        <i data-lucide="x"></i>
+      </button>
+      <div>
+        <div style="font-weight:700;font-size:1rem">Preview Laporan</div>
+        <div style="font-size:0.72rem;color:var(--text-muted)">Live Document View</div>
+      </div>
+    </div>
+    
+    <div class="nav-list" id="section-nav">
+      <div class="nav-item active" onclick="showSection('cover', this)"><i data-lucide="layout-template"></i> Cover Depan</div>
+      <div class="nav-item" onclick="showSection('pengesahan', this)"><i data-lucide="pen-tool"></i> Lembar Pengesahan</div>
+      <div class="nav-item" onclick="showSection('katapengantar', this)"><i data-lucide="message-square"></i> Kata Pengantar</div>
+      <div class="nav-item" onclick="showSection('daftarisi', this)"><i data-lucide="list"></i> Daftar Isi</div>
+      <div class="nav-item" onclick="showSection('daftargambar', this)"><i data-lucide="image"></i> Daftar Gambar</div>
+      <div class="nav-item" onclick="showSection('bab1', this)"><i data-lucide="file-text"></i> BAB I: Pendahuluan</div>
+      <div class="nav-item" onclick="showSection('bab2', this)"><i data-lucide="building"></i> BAB II: Profil Perusahaan</div>
+      <div class="nav-item" onclick="showSection('bab3', this)"><i data-lucide="briefcase"></i> BAB III: Kegiatan PKL</div>
+      <div class="nav-item" onclick="showSection('bab4pembahasan', this)"><i data-lucide="bar-chart-2"></i> BAB IV: Pembahasan</div>
+      <div class="nav-item" onclick="showSection('bab5', this)"><i data-lucide="check-square"></i> BAB V: Penutup</div>
+      <div class="nav-item" onclick="showSection('daftarpustaka', this)"><i data-lucide="bookmark"></i> Daftar Pustaka</div>
+      <div class="nav-item" onclick="showSection('lampiran', this)"><i data-lucide="paperclip"></i> Lampiran</div>
+    </div>
+
+    <div class="preview-actions">
+      <button class="btn btn-outline btn-full" id="btn-edit-mode" onclick="toggleEdit()" style="margin-bottom:0.5rem"><i data-lucide="edit"></i> Edit Teks</button>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:0.5rem">
+        <button class="btn btn-primary" onclick="downloadPdf()"><i data-lucide="file-text"></i> PDF</button>
+        <button class="btn btn-primary" onclick="downloadDocxFull()" style="background:#2563eb;border-color:#2563eb"><i data-lucide="file-text"></i> DOCX</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- CONTENT RENDER AREA -->
+  <div class="preview-content-area" id="scroll-area" style="position:relative;">
+    <!-- Edit Toolbar (Hidden by default) -->
+    <div id="edit-toolbar" style="display:none; position:sticky; top:10px; z-index:10; background:white; padding:8px 12px; border-radius:8px; box-shadow:0 4px 12px rgba(0,0,0,0.15); margin:0 auto 10px; width:max-content; gap:4px; align-items:center;">
+      <button onclick="document.execCommand('bold')" title="Bold" style="background:none;border:none;padding:4px;cursor:pointer;border-radius:4px"><i data-lucide="bold"></i></button>
+      <button onclick="document.execCommand('italic')" title="Italic" style="background:none;border:none;padding:4px;cursor:pointer;border-radius:4px"><i data-lucide="italic"></i></button>
+      <button onclick="document.execCommand('underline')" title="Underline" style="background:none;border:none;padding:4px;cursor:pointer;border-radius:4px"><i data-lucide="underline"></i></button>
+      <div style="width:1px;height:24px;background:#ddd;margin:0 4px"></div>
+      <button onclick="document.execCommand('justifyLeft')" title="Align Left" style="background:none;border:none;padding:4px;cursor:pointer;border-radius:4px"><i data-lucide="align-left"></i></button>
+      <button onclick="document.execCommand('justifyCenter')" title="Align Center" style="background:none;border:none;padding:4px;cursor:pointer;border-radius:4px"><i data-lucide="align-center"></i></button>
+      <button onclick="document.execCommand('justifyRight')" title="Align Right" style="background:none;border:none;padding:4px;cursor:pointer;border-radius:4px"><i data-lucide="align-right"></i></button>
+      <button onclick="document.execCommand('justifyFull')" title="Justify" style="background:none;border:none;padding:4px;cursor:pointer;border-radius:4px"><i data-lucide="align-justify"></i></button>
+      <div style="width:1px;height:24px;background:#ddd;margin:0 4px"></div>
+      <button onclick="resetEdit()" title="Kembalikan Semula (Reset)" style="background:none;border:none;padding:4px;cursor:pointer;border-radius:4px;color:red;display:flex;align-items:center;gap:4px;font-size:0.85rem"><i data-lucide="rotate-ccw"></i> Reset</button>
+    </div>
+
+    <div class="report-page-preview" id="report-page">
+      <div style="text-align:center;padding:5rem;color:#888;">Memuat laporan...</div>
+    </div>
+  </div>
+</div>
+
+<script src="scripts/app.js"></script>
+<script src="scripts/db.js"></script>
+<script src="scripts/generator.js"></script>
+<script src="https://unpkg.com/docx@7.8.2/build/index.js"></script>
+
+<script>
+let reportData = null;
+let generatedReport = null;
+let currentSection = 'cover';
+
+document.addEventListener('DOMContentLoaded', () => {
+  if (typeof lucide !== 'undefined') lucide.createIcons();
+  
+  const dataStr = APP.storage.get('joki_preview_data');
+  if (!dataStr) {
+    document.getElementById('report-page').innerHTML = `
+      <div style="text-align:center;padding:5rem;color:#d9534f;">
+        <h2>Data Tidak Ditemukan</h2>
+        <p>Silakan isi form terlebih dahulu di halaman pembuatan laporan.</p>
+        <button class="btn btn-primary" onclick="window.close()" style="margin-top:1rem">Tutup Jendela</button>
+      </div>`;
+    return;
+  }
+  
+  try {
+    reportData = dataStr;
+    generatedReport = GENERATOR.generate(reportData);
+    renderSection('cover');
+  } catch (err) {
+    console.error('Error generating preview:', err);
+    document.getElementById('report-page').innerHTML = `
+      <div style="text-align:center;padding:5rem;color:red;">
+        <p>Terjadi kesalahan saat memuat laporan.</p>
+        <pre style="text-align:left;font-size:10px;margin-top:1rem;background:#f5f5f5;padding:1rem;border-radius:4px">${err.message}</pre>
+      </div>`;
+  }
+});
+
+function showSection(section, el) {
+  currentSection = section;
+  document.querySelectorAll('.nav-item').forEach(item => item.classList.remove('active'));
+  el.classList.add('active');
+  renderSection(section);
+  document.getElementById('scroll-area').scrollTop = 0;
+}
+
+// ====================================================
+// RENDER SECTION — produces clean, formatted HTML
+// ====================================================
+function renderSection(section) {
+  if (!generatedReport) return;
+  
+  const container = document.getElementById('report-page');
+  const ctx = generatedReport.ctx;
+  
+  // Reset padding to default
+  container.style.padding = '2.5cm 2cm 2cm 3cm';
+
+  // ===========================================================
+  // COVER PAGE
+  // ===========================================================
+  if (section === 'cover') {
+    container.style.padding = '0';
+    container.innerHTML = `
+<div style="
+  width:100%;
+  min-height:297mm;
+  box-sizing:border-box;
+  padding:3cm 2cm 2.5cm;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  justify-content:space-between;
+  text-align:center;
+  font-family:'Times New Roman',serif;
+  font-size:12pt;
+  line-height:1.6;
+">
+  <div>
+    <p style="margin:0">LAPORAN</p>
+    <p style="margin:0">PELAKSANAAN PRAKTIK KERJA LAPANGAN</p>
+    <p style="margin:4px 0 0">...........(${ctx.namaPerusahaan || 'NAMA INDUSTRI PKL'})</p>
+  </div>
+
+  <div style="width:200px;height:200px;margin:0 auto">
+    <img
+      src="${reportData.coverPhoto || 'https://upload.wikimedia.org/wikipedia/commons/thumb/e/e0/Tut_Wuri_Handayani.svg/1200px-Tut_Wuri_Handayani.svg.png'}"
+      style="width:100%;height:100%;object-fit:contain"
+      alt="Logo Sekolah"
+      onerror="this.style.display='none';this.nextElementSibling.style.display='flex'"
+    >
+    <div style="display:none;border:1px solid #ccc;width:100%;height:100%;align-items:center;justify-content:center;color:#aaa;font-size:0.8rem">[Logo]</div>
+  </div>
+
+  <div>
+    <p style="margin:0 0 10px">Disusun oleh :</p>
+    <table style="margin:0 auto;border-collapse:collapse">
+      <tr>
+        <td style="padding:3px 0;text-align:left;width:70px">NAMA</td>
+        <td style="padding:3px 6px">:</td>
+        <td style="padding:3px 0;min-width:200px;text-align:left;border-bottom:1px dotted #444">
+          ${ctx.namaSiswa || '.................................'}
+        </td>
+      </tr>
+      <tr>
+        <td style="padding:3px 0;text-align:left">KELAS</td>
+        <td style="padding:3px 6px">:</td>
+        <td style="padding:3px 0;text-align:left;border-bottom:1px dotted #444">
+          ${ctx.kelas || '.................................'}
+        </td>
+      </tr>
+    </table>
+  </div>
+
+  <div>
+    <p style="margin:0">(KONSENTRASI KEAHLIAN MASING-MASING JURUSAN)</p>
+    <p style="margin:0;font-weight:bold">SMK NEGERI 1 PRACIMANTORO</p>
+    <p style="margin:0;font-weight:bold">WONOGIRI</p>
+    <p style="margin:16px 0 0">${new Date().getFullYear()}</p>
+  </div>
+</div>`;
+    GENERATOR.addWatermark(container);
+    return;
+  }
+
+  // ===========================================================
+  // LEMBAR PENGESAHAN
+  // ===========================================================
+  if (section === 'pengesahan') {
+    container.innerHTML = `
+<div style="font-family:'Times New Roman',serif;font-size:12pt;line-height:1.6">
+
+  <p style="text-align:center;margin:0 0 2px">${new Date().getFullYear()}</p>
+  <p style="text-align:center;font-weight:bold;margin:0 0 24px;text-transform:uppercase">Lembar Pengesahan</p>
+  <p style="text-align:center;font-weight:bold;margin:0 0 20px;text-transform:uppercase">Laporan Praktik Kerja Lapangan</p>
+
+  <table style="width:100%;border-collapse:collapse;margin-bottom:14px;font-size:12pt">
+    <tr>
+      <td style="padding:5px 0;width:180px;vertical-align:top">Nama</td>
+      <td style="padding:5px 0;width:12px;vertical-align:top">:</td>
+      <td style="padding:5px 0;border-bottom:1px solid #333;vertical-align:bottom">
+        ${ctx.namaSiswa || '.....................................................'}
+      </td>
+    </tr>
+    <tr>
+      <td style="padding:5px 0;vertical-align:top">NIS</td>
+      <td style="padding:5px 0;vertical-align:top">:</td>
+      <td style="padding:5px 0;border-bottom:1px solid #333;vertical-align:bottom">
+        ${ctx.nis || '.....................................................'}
+      </td>
+    </tr>
+    <tr>
+      <td style="padding:5px 0;vertical-align:top">Kompetensi Keahlian</td>
+      <td style="padding:5px 0;vertical-align:top">:</td>
+      <td style="padding:5px 0;border-bottom:1px solid #333;vertical-align:bottom">
+        ${ctx.jurusan || '.....................................................'}
+      </td>
+    </tr>
+    <tr>
+      <td style="padding:5px 0;vertical-align:top">Judul Laporan</td>
+      <td style="padding:5px 0;vertical-align:top">:</td>
+      <td style="padding:5px 0;border-bottom:1px solid #333;vertical-align:bottom">
+        ${ctx.namaPerusahaan ? 'Laporan PKL di ' + ctx.namaPerusahaan : '.....................................................'}
+      </td>
+    </tr>
+  </table>
+
+  <p style="margin:0 0 48px">Telah diperiksa dan disetujui untuk dijadikan laporan</p>
+
+  <table style="width:100%;border-collapse:collapse;margin-bottom:48px;font-size:12pt">
+    <tr>
+      <td style="width:50%;vertical-align:top;padding-right:16px">
+        <p style="margin:0 0 0">Ketua Konsentrasi Keahlian</p>
+        <br><br><br><br>
+        <div style="border-bottom:1px solid #000;width:100%;margin-bottom:2px"></div>
+        <p style="margin:0">NIP</p>
+      </td>
+      <td style="width:50%;vertical-align:top;padding-left:16px">
+        <p style="margin:0">Wonogiri, ..........................</p>
+        <p style="margin:0">Pembimbing PKL</p>
+        <br><br><br>
+        <div style="border-bottom:1px solid #000;width:100%;margin-bottom:2px"></div>
+        <p style="margin:0">NIP</p>
+      </td>
+    </tr>
+  </table>
+
+  <div style="text-align:center;font-size:12pt">
+    <p style="margin:0">Mengesahkan</p>
+    <p style="margin:0">Kepala SMK Negeri 1 Pracimantoro</p>
+    <br><br><br><br>
+    <div style="border-bottom:1px solid #000;width:260px;margin:0 auto 2px"></div>
+    <div style="width:260px;margin:0 auto;text-align:left">NIP</div>
+  </div>
+
+</div>`;
+    GENERATOR.addWatermark(container);
+    return;
+  }
+
+  // ===========================================================
+  // KATA PENGANTAR
+  // ===========================================================
+  if (section === 'katapengantar') {
+    const text = generatedReport[section] || '';
+    const lines = text.split('\n');
+    let html = '';
+    
+    lines.forEach((line, i) => {
+      const t = line.trim();
+      const isSignatureBlock = i >= lines.length - 4 && (t.toLowerCase().includes('penulis') || t === ctx.namaSiswa || t.includes(','));
+      
+      if (i === 0) {
+        html += `<p style="text-align:center;font-weight:bold;margin:0 0 24px">${t}</p>`;
+      } else if (!t) {
+        html += `<p style="margin:0 0 8px"></p>`;
+      } else if (t.match(/^\d+\./)) {
+        html += `<p style="margin:0 0 5px;text-align:justify">${t}</p>`;
+      } else if (isSignatureBlock) {
+        html += `<p style="margin:0;text-align:right;padding-right:2cm">${t}</p>`;
+      } else {
+        html += `<p style="margin:0 0 10px;text-align:justify;text-indent:1.25cm">${t}</p>`;
+      }
+    });
+    
+    container.innerHTML = html;
+    GENERATOR.addWatermark(container);
+    return;
+  }
+
+  // ===========================================================
+  // DAFTAR ISI — 3-column table with dotted separator
+  // ===========================================================
+  if (section === 'daftarisi') {
+    const rawText = generatedReport[section] || '';
+    const lines = rawText.split('\n');
+    
+    let html = `<p style="text-align:center;font-weight:bold;margin:0 0 20px">DAFTAR ISI</p>`;
+    html += `<table style="width:100%;border-collapse:collapse;font-size:11.5pt">`;
+    
+    lines.forEach((rawLine, i) => {
+      if (i === 0) return; // skip header "DAFTAR ISI"
+      const line = rawLine;
+      if (!line.trim()) return;
+
+      // find last "..." block
+      const dotRegex = /\.{3,}/g;
+      let lastMatch, m;
+      while ((m = dotRegex.exec(line)) !== null) { lastMatch = m; }
+      
+      if (!lastMatch) {
+        const isBab = line.trim().startsWith('BAB');
+        html += `<tr><td colspan="3" style="padding:2px 0;${isBab ? 'font-weight:bold' : ''}">${line.trim()}</td></tr>`;
+        return;
+      }
+      
+      const title = line.substring(0, lastMatch.index).trim();
+      const remainder = line.substring(lastMatch.index + lastMatch[0].length).trim();
+      // remainder is the page number
+      const pageNum = remainder.replace(/\s+/g,'');
+      
+      const isBab = title.startsWith('BAB');
+      const isLamp = title.startsWith('LAMPIRAN');
+      const isSubItem = /^[A-Z]\.\s/.test(title);
+      const bold = isBab || isLamp ? 'font-weight:bold;' : '';
+      const indent = isSubItem ? '20px' : '0';
+      
+      html += `<tr>
+        <td style="padding:2px 0;${bold}padding-left:${indent};white-space:nowrap;vertical-align:bottom">${title}</td>
+        <td style="padding:2px 6px;width:99%;border-bottom:1px dotted #666;height:16px;vertical-align:bottom"></td>
+        <td style="padding:2px 0;${bold}white-space:nowrap;text-align:right;vertical-align:bottom">${pageNum}</td>
+      </tr>`;
+    });
+    
+    html += `</table>`;
+    container.innerHTML = html;
+    GENERATOR.addWatermark(container);
+    return;
+  }
+
+  // ===========================================================
+  // DEFAULT — BAB I-V, Daftar Gambar, Pustaka, Lampiran
+  // ===========================================================
+  const html = GENERATOR.generateHtmlPreview(generatedReport, section);
+  container.innerHTML = html;
+  GENERATOR.addWatermark(container);
+}
+
+function downloadPdf() {
+  APP.notify('Siapkan PDF. Ubah pengaturan print ke "Save as PDF" dan hilangkan margin/header.', 'info');
+  setTimeout(() => {
+    window.print();
+  }, 1000);
+}
+
+async function downloadDocxFull() {
+  if (typeof docx === 'undefined') {
+    APP.notify('Library DOCX sedang dimuat, coba lagi sebentar...', 'error');
+    return;
+  }
+  APP.notify('Membuat file DOCX secara offline...', 'info');
+  try {
+    const blob = await GENERATOR.generateDocx(generatedReport);
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `Laporan_PKL_${reportData.namaSiswa ? reportData.namaSiswa.replace(/\\s+/g, '_') : 'Siswa'}.docx`;
+    a.click();
+    URL.revokeObjectURL(url);
+    APP.notify('File DOCX berhasil diunduh! (Word)', 'success');
+  } catch(err) {
+    console.error(err);
+    APP.notify('Gagal membuat DOCX: ' + err.message, 'error');
+  }
+}
+
+let isEditing = false;
+function toggleEdit() {
+  const page = document.getElementById('report-page');
+  const btn = document.getElementById('btn-edit-mode');
+  const toolbar = document.getElementById('edit-toolbar');
+  isEditing = !isEditing;
+  
+  if (isEditing) {
+    page.setAttribute('contenteditable', 'true');
+    page.style.outline = '2px dashed var(--primary)';
+    btn.innerHTML = '<i data-lucide="save"></i> Simpan Edit (Sementara)';
+    btn.classList.replace('btn-outline', 'btn-primary');
+    toolbar.style.display = 'flex';
+    APP.notify('Mode Edit Aktif. Anda bisa menebalkan teks, rata tengah, dll.', 'info');
+  } else {
+    page.removeAttribute('contenteditable');
+    page.style.outline = 'none';
+    btn.innerHTML = '<i data-lucide="edit"></i> Edit Teks Laporan';
+    btn.classList.replace('btn-primary', 'btn-outline');
+    toolbar.style.display = 'none';
+    APP.notify('Mode Edit dimatikan.', 'success');
+  }
+  lucide.createIcons();
+}
+
+function resetEdit() {
+  if (confirm('Kembalikan ke format awal? Semua editan manual di halaman ini akan hilang.')) {
+    renderSection(currentSection);
+    APP.notify('Halaman dikembalikan ke format awal.', 'success');
+  }
+}
+</script>
+
+</body>
+</html>

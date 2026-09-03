@@ -4,29 +4,113 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Buat Laporan PKL — JokiLaporan.id</title>
-  <meta name="description" content="Isi form data PKL kamu dan generate laporan otomatis berkualitas profesional.">
+  <meta name="description" content="Wizard pembuatan laporan PKL lengkap: pilih sekolah, jurusan, isi data, tambah kegiatan, upload foto, dan preview live.">
   <link rel="stylesheet" href="styles/main.css">
+  <script src="https://unpkg.com/lucide@latest"></script>
   <style>
-    .gen-layout { display: grid; grid-template-columns: 1fr 360px; gap: 2rem; align-items: start; }
-    .gen-sidebar { position: sticky; top: 100px; }
-    @media (max-width: 900px) { .gen-layout { grid-template-columns: 1fr; } .gen-sidebar { display: none; } }
+    /* ====== WIZARD LAYOUT ====== */
+    .wizard-layout { display: grid; grid-template-columns: 1fr 360px; gap: 2rem; align-items: start; }
+    .wizard-sidebar { position: sticky; top: 90px; }
+    @media (max-width: 960px) { .wizard-layout { grid-template-columns: 1fr; } .wizard-sidebar { display: none; } }
+
+    /* ====== ACTIVITY FORM ====== */
+    .activity-list { display: flex; flex-direction: column; gap: 1rem; }
+    .activity-form-card {
+      background: var(--bg-surface);
+      border: 1px solid var(--border-primary);
+      border-radius: var(--radius-xl);
+      padding: 1.5rem;
+      animation: fadeInUp 0.3s ease;
+    }
+    .activity-form-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 1rem; }
+
+    /* ====== PHOTO UPLOAD ====== */
+    .photo-upload-area {
+      border: 2px dashed var(--border-strong);
+      border-radius: var(--radius-lg);
+      padding: 2rem;
+      text-align: center;
+      cursor: pointer;
+      transition: all var(--transition-fast);
+    }
+    .photo-upload-area:hover, .photo-upload-area.drag-over {
+      border-color: var(--primary);
+      background: rgba(124,58,237,0.04);
+    }
+    .photo-preview-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+      gap: 0.75rem;
+      margin-top: 1rem;
+    }
+    .photo-preview-item {
+      position: relative;
+      aspect-ratio: 1;
+      border-radius: var(--radius-md);
+      overflow: hidden;
+      border: 1px solid var(--border);
+    }
+    .photo-preview-item img { width: 100%; height: 100%; object-fit: cover; }
+    .photo-remove-btn {
+      position: absolute;
+      top: 4px; right: 4px;
+      width: 22px; height: 22px;
+      background: rgba(239,68,68,0.9);
+      border: none;
+      border-radius: 50%;
+      color: white;
+      font-size: 0.7rem;
+      cursor: pointer;
+      display: flex; align-items: center; justify-content: center;
+    }
+    .photo-caption-input {
+      width: 100%;
+      background: transparent;
+      border: none;
+      border-top: 1px solid var(--border);
+      padding: 4px 6px;
+      font-size: 0.72rem;
+      color: var(--text-secondary);
+      outline: none;
+      position: absolute;
+      bottom: 0; left: 0; right: 0;
+      background: rgba(0,0,0,0.6);
+    }
+
+    /* ====== PLAN CHIPS ====== */
     .plan-chip { border: 1px solid var(--border); border-radius: var(--radius-lg); padding: 0.75rem 1rem; cursor: pointer; transition: all var(--transition-fast); display: flex; align-items: center; gap: 0.75rem; }
     .plan-chip:hover { border-color: var(--primary-light); background: rgba(124,58,237,0.05); }
     .plan-chip.selected { border-color: var(--primary); background: rgba(124,58,237,0.1); }
     .plan-chip-radio { width: 18px; height: 18px; border-radius: 50%; border: 2px solid var(--border-strong); flex-shrink: 0; transition: all var(--transition-fast); display: flex; align-items: center; justify-content: center; }
     .plan-chip.selected .plan-chip-radio { border-color: var(--primary); background: var(--primary); }
     .plan-chip.selected .plan-chip-radio::after { content:''; width:7px; height:7px; background:white; border-radius:50%; }
-    .step-content { display: none; }
-    .step-content.active { display: block; animation: fadeInUp 0.4s ease; }
-    .week-row { display: grid; grid-template-columns: 140px 1fr; gap: 1rem; margin-bottom: 1rem; align-items: start; }
-    @media (max-width: 600px) { .week-row { grid-template-columns: 1fr; } }
-    .preview-box { background: var(--bg-glass); border: 1px solid var(--border); border-radius: var(--radius-md); padding: 1rem; font-size: 0.85rem; color: var(--text-secondary); line-height: 1.6; max-height: 200px; overflow-y: auto; }
-  </style>
 
-  <!-- Lucide Icons -->
-  <script src="https://unpkg.com/lucide@latest"></script>
+    /* ====== VALIDATION CHECKLIST ====== */
+    .validation-list { list-style: none; display: flex; flex-direction: column; gap: 0.5rem; }
+    .validation-item { display: flex; align-items: center; gap: 0.5rem; font-size: 0.82rem; }
+    .validation-item .vicon { width: 18px; height: 18px; border-radius: 50%; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+    .validation-item.ok .vicon { background: rgba(34,197,94,0.15); color: #86efac; }
+    .validation-item.err .vicon { background: rgba(239,68,68,0.1); color: #fca5a5; }
+    .validation-item.warn .vicon { background: rgba(245,158,11,0.1); color: #fcd34d; }
+
+    /* ====== PROGRESS FILL ANIMATION ====== */
+    .step-progress-bar {
+      height: 4px;
+      background: var(--border);
+      border-radius: 2px;
+      margin: 1rem 0 1.5rem;
+      overflow: hidden;
+    }
+    .step-progress-fill {
+      height: 100%;
+      background: var(--grad-primary);
+      border-radius: 2px;
+      transition: width 0.5s ease;
+    }
+  </style>
 </head>
 <body>
+
 <!-- NAVBAR -->
 <nav class="navbar">
   <div class="container">
@@ -39,85 +123,121 @@
         <li><a href="index.html#pricing">Harga</a></li>
         <li><a href="index.html#faq">FAQ</a></li>
       </ul>
-      <div class="navbar-actions">
-        <button class="btn btn-ghost btn-sm" onclick="openModal('loginModal')">Masuk</button>
-        <button class="btn btn-primary btn-sm" onclick="openModal('registerModal')">Daftar</button>
-      </div>
+      <div class="navbar-actions"></div>
     </div>
   </div>
 </nav>
 
+<!-- PAGE HEADER -->
 <div class="page-header">
   <div class="container">
-    <span class="badge badge-primary" style="margin-bottom:1rem"><i data-lucide="pen-line"></i> Form Generator Laporan</span>
-    <h1 class="page-header-title">Isi Data <span class="text-gradient">Laporan PKL</span></h1>
-    <p class="page-header-subtitle">Lengkapi 4 langkah berikut untuk menghasilkan laporan PKL berkualitas profesional</p>
+    <span class="badge badge-primary" style="margin-bottom:1rem"><i data-lucide="pen-line"></i> Wizard Pembuatan Laporan</span>
+    <h1 class="page-header-title">Buat <span class="text-gradient">Laporan PKL</span></h1>
+    <p class="page-header-subtitle">Ikuti 9 langkah mudah untuk menghasilkan laporan PKL profesional yang siap dikumpulkan</p>
   </div>
 </div>
 
-<div class="container" style="padding-bottom: 4rem">
-  <!-- TEMPLATE SELECTOR -->
-  <div style="margin-bottom:2rem">
-    <div style="display:flex;align-items:center;gap:0.75rem;margin-bottom:1rem">
-      <span style="font-size:1.1rem;font-weight:700"><i data-lucide="layout-template"></i> Pilih Jenis Laporan</span>
-      <span class="badge badge-success">Baru!</span>
-    </div>
-    <div class="template-selector" id="template-selector">
-      <div class="template-card selected" data-tpl="smk-pkl" onclick="selectTemplate('smk-pkl',this)">
-        <span class="tpl-badge badge badge-primary">Default</span>
-        <div class="tpl-icon"><i data-lucide="file-text"></i></div>
-        <div class="tpl-name">PKL SMK</div>
-        <div class="tpl-desc">Praktik Kerja Lapangan, format standar SMK</div>
-      </div>
-      <div class="template-card" data-tpl="smk-prakerin" onclick="selectTemplate('smk-prakerin',this)">
-        <div class="tpl-icon"><i data-lucide="building"></i></div>
-        <div class="tpl-name">Prakerin SMK</div>
-        <div class="tpl-desc">Praktek Kerja Industri, terminologi DU/DI</div>
-      </div>
-      <div class="template-card" data-tpl="kp-kampus" onclick="selectTemplate('kp-kampus',this)">
-        <div class="tpl-icon"><i data-lucide="graduation-cap"></i></div>
-        <div class="tpl-name">KP Kampus</div>
-        <div class="tpl-desc">Kerja Praktik D3/S1, NIM & Dosen Pembimbing</div>
-      </div>
-      <div class="template-card" data-tpl="magang" onclick="selectTemplate('magang',this)">
-        <div class="tpl-icon"><i data-lucide="briefcase"></i></div>
-        <div class="tpl-name">Magang Umum</div>
-        <div class="tpl-desc">Magang industri, format fleksibel & bebas</div>
-      </div>
-    </div>
+<div class="container" style="padding-bottom:4rem">
+
+  <!-- STEP PROGRESS -->
+  <div class="steps-container" id="steps-nav" style="margin-top:2rem">
+    <!-- Rendered by JS -->
+  </div>
+  <div class="step-progress-bar">
+    <div class="step-progress-fill" id="step-progress-fill" style="width:11%"></div>
   </div>
 
-  <!-- STEPS -->
-  <div class="steps-container">
-    <div class="step-item active" id="step-1-indicator">
-      <div class="step-circle">1</div>
-      <div class="step-label" id="lbl-step1">Data Siswa</div>
-    </div>
-    <div class="step-connector" id="conn-1"></div>
-    <div class="step-item" id="step-2-indicator">
-      <div class="step-circle">2</div>
-      <div class="step-label">Data DU/DI</div>
-    </div>
-    <div class="step-connector" id="conn-2"></div>
-    <div class="step-item" id="step-3-indicator">
-      <div class="step-circle">3</div>
-      <div class="step-label">Kegiatan</div>
-    </div>
-    <div class="step-connector" id="conn-3"></div>
-    <div class="step-item" id="step-4-indicator">
-      <div class="step-circle">4</div>
-      <div class="step-label">Pilih Paket</div>
-    </div>
-  </div>
-
-  <div class="gen-layout">
+  <div class="wizard-layout">
     <!-- MAIN FORM -->
     <div>
-      <!-- STEP 1: Data Siswa -->
+
+      <!-- ======== STEP 1: Pilih Template ======== -->
       <div class="step-content active" id="step-1">
         <div class="card">
-          <h2 style="margin-bottom:0.5rem;font-size:1.4rem"><i data-lucide="clipboard-list"></i> Data Diri Siswa</h2>
-          <p style="color:var(--text-secondary);font-size:0.9rem;margin-bottom:1.5rem">Isi data dirimu sebagai siswa yang melaksanakan PKL</p>
+          <h2 style="margin-bottom:0.5rem;font-size:1.4rem"><i data-lucide="layout-template"></i> Pilih Jenis Laporan</h2>
+          <p style="color:var(--text-secondary);font-size:0.9rem;margin-bottom:1.5rem">Pilih jenis laporan yang sesuai dengan program pendidikanmu</p>
+
+          <div class="template-selector" id="template-selector">
+            <div class="template-card selected" data-tpl="smk-pkl" onclick="selectTemplate('smk-pkl',this)">
+              <span class="tpl-badge badge badge-primary">Default</span>
+              <div class="tpl-icon"><i data-lucide="file-text"></i></div>
+              <div class="tpl-name">PKL SMK</div>
+              <div class="tpl-desc">Praktik Kerja Lapangan, format standar SMK</div>
+            </div>
+            <div class="template-card" data-tpl="smk-prakerin" onclick="selectTemplate('smk-prakerin',this)">
+              <div class="tpl-icon"><i data-lucide="building"></i></div>
+              <div class="tpl-name">Prakerin SMK</div>
+              <div class="tpl-desc">Praktik Kerja Industri, terminologi DU/DI</div>
+            </div>
+            <div class="template-card" data-tpl="kp-kampus" onclick="selectTemplate('kp-kampus',this)">
+              <div class="tpl-icon"><i data-lucide="graduation-cap"></i></div>
+              <div class="tpl-name">KP Kampus</div>
+              <div class="tpl-desc">Kerja Praktik D3/S1, NIM & Dosen Pembimbing</div>
+            </div>
+            <div class="template-card" data-tpl="magang" onclick="selectTemplate('magang',this)">
+              <div class="tpl-icon"><i data-lucide="briefcase"></i></div>
+              <div class="tpl-name">Magang Umum</div>
+              <div class="tpl-desc">Magang industri, format fleksibel</div>
+            </div>
+          </div>
+        </div>
+        <div class="step-nav-btns">
+          <div></div>
+          <button class="btn btn-primary btn-lg" onclick="goStep(2)">Lanjut: Pilih Sekolah <i data-lucide="arrow-right"></i></button>
+        </div>
+      </div>
+
+      <!-- ======== STEP 2: Pilih Sekolah & Jurusan ======== -->
+      <div class="step-content" id="step-2">
+        <div class="card">
+          <h2 style="margin-bottom:0.5rem;font-size:1.4rem"><i data-lucide="school"></i> Pilih Sekolah & Jurusan</h2>
+          <p style="color:var(--text-secondary);font-size:0.9rem;margin-bottom:1.5rem">Pilih sekolahmu untuk mendapatkan template yang sesuai</p>
+
+          <div class="form-group" style="margin-bottom:1.25rem">
+            <label class="form-label"><i data-lucide="school"></i> Nama Sekolah *</label>
+            <select id="schoolSelect" class="form-select" onchange="onSchoolChange()">
+              <option value="">-- Pilih Sekolah --</option>
+            </select>
+            <div class="form-error">Sekolah wajib dipilih</div>
+          </div>
+
+          <div class="form-group" id="dept-group" style="display:none;margin-bottom:1.25rem">
+            <label class="form-label"><i data-lucide="layers"></i> Jurusan / Program Keahlian *</label>
+            <select id="deptSelect" class="form-select" onchange="onDeptChange()">
+              <option value="">-- Pilih Jurusan --</option>
+            </select>
+            <div class="form-error">Jurusan wajib dipilih</div>
+          </div>
+
+          <div id="custom-school-group" style="display:none;margin-bottom:1rem">
+            <div class="form-row">
+              <div class="form-group">
+                <label class="form-label">Nama Sekolah (Tulis Manual) *</label>
+                <input type="text" id="sekolah" class="form-input" placeholder="Nama lengkap sekolah">
+              </div>
+              <div class="form-group">
+                <label class="form-label">Kota / Kabupaten</label>
+                <input type="text" id="kota" class="form-input" placeholder="Contoh: Bandung">
+              </div>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Jurusan / Program Keahlian *</label>
+              <input type="text" id="jurusan" class="form-input" placeholder="Contoh: Rekayasa Perangkat Lunak">
+            </div>
+          </div>
+        </div>
+        <div class="step-nav-btns">
+          <button class="btn btn-outline btn-lg" onclick="goStep(1)"><i data-lucide="arrow-left"></i> Kembali</button>
+          <button class="btn btn-primary btn-lg" onclick="goStep(3)" id="btn-s2-next">Lanjut: Identitas <i data-lucide="arrow-right"></i></button>
+        </div>
+      </div>
+
+      <!-- ======== STEP 3: Identitas Siswa ======== -->
+      <div class="step-content" id="step-3">
+        <div class="card">
+          <h2 style="margin-bottom:0.5rem;font-size:1.4rem"><i data-lucide="user"></i> <span id="lbl-step3-title">Data Diri Siswa</span></h2>
+          <p style="color:var(--text-secondary);font-size:0.9rem;margin-bottom:1.5rem">Isi data dirimu dengan lengkap dan benar</p>
+
           <div class="form-row">
             <div class="form-group">
               <label class="form-label">Nama Lengkap *</label>
@@ -125,7 +245,7 @@
               <div class="form-error">Nama wajib diisi</div>
             </div>
             <div class="form-group">
-              <label class="form-label">NIS *</label>
+              <label class="form-label" id="lbl-nis-form">NIS *</label>
               <input type="text" id="nis" class="form-input" placeholder="Nomor Induk Siswa">
               <div class="form-error">NIS wajib diisi</div>
             </div>
@@ -137,55 +257,41 @@
               <div class="form-error">Kelas wajib diisi</div>
             </div>
             <div class="form-group">
-              <label class="form-label">Jurusan / Program Keahlian *</label>
-              <select id="jurusan" class="form-select">
-                <option value="">-- Pilih Jurusan --</option>
-                <option value="Rekayasa Perangkat Lunak (RPL)">Rekayasa Perangkat Lunak (RPL)</option>
-                <option value="Teknik Komputer dan Jaringan (TKJ)">Teknik Komputer dan Jaringan (TKJ)</option>
-                <option value="Multimedia (MM)">Multimedia (MM)</option>
-                <option value="Akuntansi dan Keuangan Lembaga">Akuntansi dan Keuangan Lembaga</option>
-                <option value="Bisnis Daring dan Pemasaran">Bisnis Daring dan Pemasaran</option>
-                <option value="Otomasi dan Robotika Industri">Otomasi dan Robotika Industri</option>
-                <option value="Teknik Instalasi Tenaga Listrik">Teknik Instalasi Tenaga Listrik</option>
-                <option value="Teknik Kendaraan Ringan Otomotif">Teknik Kendaraan Ringan Otomotif</option>
-                <option value="Desain Komunikasi Visual (DKV)">Desain Komunikasi Visual (DKV)</option>
-                <option value="Perhotelan">Perhotelan</option>
-                <option value="Kuliner">Kuliner</option>
-                <option value="Lainnya">Lainnya</option>
-              </select>
-              <div class="form-error">Jurusan wajib dipilih</div>
+              <label class="form-label">Nama Guru Pembimbing</label>
+              <input type="text" id="guruPembimbing" class="form-input" placeholder="Nama guru pembimbing sekolah">
             </div>
           </div>
           <div class="form-row">
             <div class="form-group">
-              <label class="form-label">Nama Sekolah *</label>
-              <input type="text" id="sekolah" class="form-input" placeholder="Contoh: SMK Negeri 1 Bandung">
-              <div class="form-error">Nama sekolah wajib diisi</div>
+              <label class="form-label">Nama Kepala Sekolah</label>
+              <input type="text" id="kepalaSekolah" class="form-input" placeholder="Nama kepala sekolah">
             </div>
-            <div class="form-group">
-              <label class="form-label">Kota / Kabupaten</label>
-              <input type="text" id="kota" class="form-input" placeholder="Contoh: Bandung">
+            <div class="form-group" id="kota-group">
+              <label class="form-label">Kota / Kabupaten Sekolah *</label>
+              <input type="text" id="kotaSekolah" class="form-input" placeholder="Contoh: Bandung">
             </div>
           </div>
         </div>
-        <div style="display:flex;justify-content:flex-end;margin-top:1.5rem">
-          <button class="btn btn-primary btn-lg" onclick="nextStep(1)" id="btn-step1-next">Lanjut: Data DU/DI →</button>
+        <div class="step-nav-btns">
+          <button class="btn btn-outline btn-lg" onclick="goStep(2)"><i data-lucide="arrow-left"></i> Kembali</button>
+          <button class="btn btn-primary btn-lg" onclick="goStep(4)">Lanjut: Data PKL <i data-lucide="arrow-right"></i></button>
         </div>
       </div>
 
-      <!-- STEP 2: Data DU/DI -->
-      <div class="step-content" id="step-2">
+      <!-- ======== STEP 4: Data PKL ======== -->
+      <div class="step-content" id="step-4">
         <div class="card">
-          <h2 style="margin-bottom:0.5rem;font-size:1.4rem"><i data-lucide="building"></i> Data Tempat PKL (DU/DI)</h2>
-          <p style="color:var(--text-secondary);font-size:0.9rem;margin-bottom:1.5rem">Isi informasi perusahaan atau instansi tempat kamu melaksanakan PKL</p>
-          <div class="form-group">
+          <h2 style="margin-bottom:0.5rem;font-size:1.4rem"><i data-lucide="building"></i> Data Tempat PKL</h2>
+          <p style="color:var(--text-secondary);font-size:0.9rem;margin-bottom:1.5rem">Informasi perusahaan/instansi tempat kamu melaksanakan PKL</p>
+
+          <div class="form-group" style="margin-bottom:1rem">
             <label class="form-label">Nama Perusahaan / Instansi *</label>
             <input type="text" id="namaPerusahaan" class="form-input" placeholder="Contoh: PT. Teknologi Maju Indonesia">
             <div class="form-error">Nama perusahaan wajib diisi</div>
           </div>
-          <div class="form-group">
+          <div class="form-group" style="margin-bottom:1rem">
             <label class="form-label">Alamat Lengkap *</label>
-            <input type="text" id="alamatPerusahaan" class="form-input" placeholder="Contoh: Jl. Sudirman No. 123, Jakarta Pusat">
+            <input type="text" id="alamatPerusahaan" class="form-input" placeholder="Jl. Nama Jalan No. 123, Kota">
             <div class="form-error">Alamat wajib diisi</div>
           </div>
           <div class="form-row">
@@ -195,10 +301,17 @@
               <div class="form-error">Bidang usaha wajib diisi</div>
             </div>
             <div class="form-group">
+              <label class="form-label">Jabatan Pembimbing DU/DI</label>
+              <input type="text" id="jabatanPembimbing" class="form-input" placeholder="Contoh: IT Manager">
+            </div>
+          </div>
+          <div class="form-row">
+            <div class="form-group">
               <label class="form-label">Nama Pembimbing DU/DI *</label>
-              <input type="text" id="namaPembimbing" class="form-input" placeholder="Contoh: Bapak Andi Susanto, S.Kom">
+              <input type="text" id="namaPembimbing" class="form-input" placeholder="Nama lengkap pembimbing">
               <div class="form-error">Nama pembimbing wajib diisi</div>
             </div>
+            <div class="form-group"></div>
           </div>
           <div class="form-row">
             <div class="form-group">
@@ -213,123 +326,193 @@
             </div>
           </div>
         </div>
-        <div style="display:flex;justify-content:space-between;margin-top:1.5rem">
-          <button class="btn btn-outline btn-lg" onclick="prevStep(2)">← Kembali</button>
-          <button class="btn btn-primary btn-lg" onclick="nextStep(2)" id="btn-step2-next">Lanjut: Kegiatan PKL →</button>
+        <div class="step-nav-btns">
+          <button class="btn btn-outline btn-lg" onclick="goStep(3)"><i data-lucide="arrow-left"></i> Kembali</button>
+          <button class="btn btn-primary btn-lg" onclick="goStep(5)">Lanjut: Profil Perusahaan <i data-lucide="arrow-right"></i></button>
         </div>
       </div>
 
-      <!-- STEP 3: Detail Kegiatan -->
-      <div class="step-content" id="step-3">
+      <!-- ======== STEP 5: Profil Perusahaan ======== -->
+      <div class="step-content" id="step-5">
         <div class="card">
-          <h2 style="margin-bottom:0.5rem;font-size:1.4rem"><i data-lucide="calendar"></i> Detail Kegiatan PKL</h2>
-          <p style="color:var(--text-secondary);font-size:0.9rem;margin-bottom:1.5rem">Ceritakan kegiatan yang kamu lakukan selama PKL (semakin detail, semakin bagus hasilnya!)</p>
+          <h2 style="margin-bottom:0.5rem;font-size:1.4rem"><i data-lucide="info"></i> Profil Tempat PKL</h2>
+          <p style="color:var(--text-secondary);font-size:0.9rem;margin-bottom:1.5rem">Informasi ini akan digunakan untuk BAB II laporan. Semakin detail, semakin bagus!</p>
 
-          <div style="margin-bottom:1.5rem">
-            <label class="form-label">Jumlah Minggu Kegiatan yang Ingin Diisi</label>
-            <select id="jumlahMinggu" class="form-select" onchange="renderWeekRows()" style="max-width:200px">
-              <option value="4">4 Minggu</option>
-              <option value="6">6 Minggu</option>
-              <option value="8" selected>8 Minggu</option>
-              <option value="10">10 Minggu</option>
-              <option value="12">12 Minggu</option>
-            </select>
+          <div class="form-group" style="margin-bottom:1rem">
+            <label class="form-label">Sejarah Singkat Perusahaan</label>
+            <textarea id="sejarahPerusahaan" class="form-textarea" rows="4" placeholder="Ceritakan sejarah berdirinya perusahaan, kapan didirikan, oleh siapa, dan perkembangannya..."></textarea>
+            <div class="form-hint">Kosongkan jika tidak mengetahui — akan diisi placeholder</div>
           </div>
-
-          <div id="week-rows-container"></div>
-
-          <div class="form-group" style="margin-top:1.5rem">
-            <label class="form-label">Upload Foto Kegiatan / Dokumentasi PKL (Opsional)</label>
-            <div style="display:flex;align-items:center;gap:1rem;">
-              <label for="fotoKegiatan" class="btn btn-outline" style="cursor:pointer">
-                <i data-lucide="image"></i> Pilih Foto
-              </label>
-              <input type="file" id="fotoKegiatan" accept="image/*" style="display:none" onchange="document.getElementById('fotoName').textContent = this.files[0]?.name || 'Tidak ada file dipilih'">
-              <span id="fotoName" style="color:var(--text-secondary);font-size:0.9rem">Tidak ada file dipilih</span>
-            </div>
-            <div class="form-hint" style="color:var(--primary);font-weight:600;margin-top:0.5rem">
-              <i data-lucide="sparkles" style="width:14px;height:14px;"></i> AI kami akan menyusun teks deskripsi kegiatan berdasarkan foto yang diupload & jurusan yang dipilih!
-            </div>
+          <div class="form-group" style="margin-bottom:1rem">
+            <label class="form-label">Visi Perusahaan</label>
+            <textarea id="visiPerusahaan" class="form-textarea" rows="2" placeholder="Tuliskan visi perusahaan..."></textarea>
           </div>
-
-          <div class="form-group" style="margin-top:1.5rem">
-            <label class="form-label">Kendala yang Dihadapi Selama PKL</label>
-            <textarea id="kendala" class="form-textarea" placeholder="Ceritakan kendala/hambatan yang kamu hadapi selama PKL dan bagaimana cara mengatasinya..." rows="3"></textarea>
-            <div class="form-hint">Opsional — isi untuk membuat laporan lebih kaya dan realistis</div>
-          </div>
-
-          <div class="form-group">
-            <label class="form-label">Kesimpulan (Opsional)</label>
-            <textarea id="kesimpulan" class="form-textarea" placeholder="Tuliskan kesimpulan singkat dari pengalaman PKL kamu... (jika kosong, akan digenerate otomatis)" rows="3"></textarea>
+          <div class="form-group" style="margin-bottom:1rem">
+            <label class="form-label">Misi Perusahaan</label>
+            <textarea id="misiPerusahaan" class="form-textarea" rows="3" placeholder="Tuliskan misi perusahaan (pisahkan dengan enter untuk setiap poin)..."></textarea>
           </div>
         </div>
-        <div style="display:flex;justify-content:space-between;margin-top:1.5rem">
-          <button class="btn btn-outline btn-lg" onclick="prevStep(3)">← Kembali</button>
-          <button class="btn btn-primary btn-lg" onclick="nextStep(3)" id="btn-step3-next">Lanjut: Pilih Paket →</button>
+        <div class="step-nav-btns">
+          <button class="btn btn-outline btn-lg" onclick="goStep(4)"><i data-lucide="arrow-left"></i> Kembali</button>
+          <button class="btn btn-primary btn-lg" onclick="goStep(6)">Lanjut: Kegiatan PKL <i data-lucide="arrow-right"></i></button>
         </div>
       </div>
 
-      <!-- STEP 4: Pilih Paket -->
-      <div class="step-content" id="step-4">
+      <!-- ======== STEP 6: Kegiatan PKL ======== -->
+      <div class="step-content" id="step-6">
         <div class="card">
-          <h2 style="margin-bottom:0.5rem;font-size:1.4rem"><i data-lucide="credit-card"></i> Pilih Paket Laporan</h2>
-          <p style="color:var(--text-secondary);font-size:0.9rem;margin-bottom:1.5rem">Pilih paket yang sesuai kebutuhanmu</p>
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:1.5rem;flex-wrap:wrap;gap:1rem">
+            <div>
+              <h2 style="margin-bottom:0.25rem;font-size:1.4rem"><i data-lucide="calendar"></i> Kegiatan PKL</h2>
+              <p style="color:var(--text-secondary);font-size:0.85rem">Tambahkan setiap kegiatan yang kamu lakukan. Semakin detail = laporan makin bagus!</p>
+            </div>
+            <button class="btn btn-primary" onclick="openActivityModal()">
+              <i data-lucide="plus"></i> Tambah Kegiatan
+            </button>
+          </div>
 
-          <div style="display:flex;flex-direction:column;gap:1rem">
-            <div class="plan-chip" id="chip-basic" onclick="selectPlan('basic',this)">
-              <div class="plan-chip-radio"></div>
-              <div style="font-size:1.5rem"><i data-lucide="file"></i></div>
-              <div style="flex:1">
-                <div style="display:flex;align-items:center;gap:0.75rem">
-                  <strong>Basic</strong>
-                  <span class="badge badge-cyan">Gratis</span>
-                </div>
-                <div style="font-size:0.85rem;color:var(--text-secondary);margin-top:2px">1x Laporan, Download PDF, Tonton Iklan 30dtk</div>
+          <!-- Usage info -->
+          <div id="activity-usage" style="background:var(--bg-glass);border:1px solid var(--border);border-radius:var(--radius-md);padding:0.75rem 1rem;margin-bottom:1rem;font-size:0.85rem;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:0.5rem">
+            <span style="color:var(--text-secondary)">Kegiatan: <strong id="act-count">0</strong> / <strong id="act-limit">10</strong></span>
+            <a href="index.html#pricing" style="color:var(--primary-light);font-size:0.8rem">Upgrade untuk lebih banyak →</a>
+          </div>
+
+          <!-- Activity list -->
+          <div id="activity-list" class="activity-list">
+            <div class="empty-state" id="activity-empty">
+              <div class="empty-state-icon"><i data-lucide="calendar-plus" style="width:48px;height:48px"></i></div>
+              <div class="empty-state-title">Belum ada kegiatan</div>
+              <div class="empty-state-desc">Klik "Tambah Kegiatan" untuk mulai menambahkan kegiatan PKL kamu</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="step-nav-btns">
+          <button class="btn btn-outline btn-lg" onclick="goStep(5)"><i data-lucide="arrow-left"></i> Kembali</button>
+          <button class="btn btn-primary btn-lg" onclick="goStep(7)">Lanjut: Dokumentasi <i data-lucide="arrow-right"></i></button>
+        </div>
+      </div>
+
+      <!-- ======== STEP 7: Upload Dokumentasi ======== -->
+      <div class="step-content" id="step-7">
+        <div class="card">
+          <h2 style="margin-bottom:0.5rem;font-size:1.4rem"><i data-lucide="images"></i> Upload Foto Dokumentasi</h2>
+          <p style="color:var(--text-secondary);font-size:0.9rem;margin-bottom:1rem">Foto kegiatan akan otomatis dimasukkan ke laporan sesuai posisinya</p>
+          
+          <div style="background: rgba(124,58,237,0.08); border: 1px solid rgba(124,58,237,0.2); border-radius: var(--radius-md); padding: 1rem; margin-bottom: 1.5rem;">
+            <div style="font-weight:600; margin-bottom:0.5rem; color:var(--primary); display:flex; align-items:center; gap:0.4rem;">
+              <i data-lucide="info" style="width:16px;height:16px"></i> Informasi Tata Letak Foto
+            </div>
+            <ul style="margin:0; padding-left:1.25rem; font-size:0.85rem; color:var(--text-secondary); line-height:1.6">
+              <li><strong>Foto Cover:</strong> Gunakan tombol pertama di bawah untuk logo sekolah/instansi (Kosongi jika ingin pakai logo baku).</li>
+              <li><strong>Foto Lampiran (Kegiatan):</strong> Foto diunggah sendiri-sendiri per lampiran kegiatan. Otomatis masuk ke BAB III dan halaman Lampiran.</li>
+            </ul>
+          </div>
+          
+          <div class="card" style="margin-bottom:1.5rem; border:2px dashed var(--primary); background:rgba(124,58,237,0.02)">
+            <div style="display:flex;align-items:center;gap:0.75rem;margin-bottom:1rem">
+              <div class="activity-number" style="background:var(--primary);color:white"><i data-lucide="layout-template" style="width:14px;height:14px"></i></div>
+              <div>
+                <div style="font-weight:600">Logo / Foto Cover</div>
+                <div style="font-size:0.8rem;color:var(--text-muted)" id="cover-photo-status">Belum ada foto (Pakai logo baku)</div>
               </div>
             </div>
+            <div class="photo-upload-area" id="drop-cover" onclick="document.getElementById('file-input-cover').click()" style="min-height:120px">
+              <div style="font-size:2rem;margin-bottom:0.5rem;color:var(--primary)">
+                <i data-lucide="image-plus"></i>
+              </div>
+              <div style="font-weight:600;margin-bottom:0.25rem">Pilih Foto Cover</div>
+            </div>
+            <input type="file" id="file-input-cover" accept="image/*" style="display:none" onchange="handleCoverUpload(this)">
+            <div class="photo-preview-grid" id="photo-grid-cover"></div>
+          </div>
 
+          <hr style="border:none;border-top:1px dashed var(--border);margin:1.5rem 0">
+
+          <div id="photo-per-activity">
+            <!-- Rendered by JS -->
+          </div>
+        </div>
+        <div class="step-nav-btns">
+          <button class="btn btn-outline btn-lg" onclick="goStep(6)"><i data-lucide="arrow-left"></i> Kembali</button>
+          <button class="btn btn-primary btn-lg" onclick="goStep(8)">Lanjut: Pertanyaan <i data-lucide="arrow-right"></i></button>
+        </div>
+      </div>
+
+      <!-- ======== STEP 8: Pertanyaan Dinamis ======== -->
+      <div class="step-content" id="step-8">
+        <div class="card">
+          <h2 style="margin-bottom:0.5rem;font-size:1.4rem"><i data-lucide="help-circle"></i> Pertanyaan Tambahan</h2>
+          <p style="color:var(--text-secondary);font-size:0.9rem;margin-bottom:1.5rem">Pertanyaan khusus berdasarkan jurusan untuk melengkapi isi laporan</p>
+          <div id="dynamic-questions">
+            <div style="text-align:center;padding:2rem;color:var(--text-muted)">Pilih jurusan di Step 2 terlebih dahulu untuk melihat pertanyaan</div>
+          </div>
+        </div>
+        <div class="step-nav-btns">
+          <button class="btn btn-outline btn-lg" onclick="goStep(7)"><i data-lucide="arrow-left"></i> Kembali</button>
+          <button class="btn btn-primary btn-lg" onclick="goStep(9)">Review & Preview <i data-lucide="arrow-right"></i></button>
+        </div>
+      </div>
+
+      <!-- ======== STEP 9: Review & Finalize ======== -->
+      <div class="step-content" id="step-9">
+        <div class="card">
+          <h2 style="margin-bottom:1rem;font-size:1.4rem"><i data-lucide="check-circle-2"></i> Review Data</h2>
+
+          <!-- Validation checklist -->
+          <div id="validation-result" style="margin-bottom:1.5rem"></div>
+
+          <!-- Data summary -->
+          <div style="background:var(--bg-glass);border-radius:var(--radius-lg);padding:1.25rem;margin-bottom:1.5rem">
+            <h4 style="margin-bottom:1rem;font-size:0.95rem">📋 Ringkasan Data</h4>
+            <div id="data-summary" style="font-size:0.85rem;line-height:1.8;color:var(--text-secondary)">—</div>
+          </div>
+
+          <!-- Plan selection -->
+          <h3 style="margin-bottom:1rem"><i data-lucide="credit-card"></i> Pilih Paket</h3>
+          <div style="display:flex;flex-direction:column;gap:0.75rem">
+            <div class="plan-chip" id="chip-free" onclick="selectPlan('free',this)">
+              <div class="plan-chip-radio"></div>
+              <div style="font-size:1.3rem"><i data-lucide="file"></i></div>
+              <div style="flex:1">
+                <div style="display:flex;align-items:center;gap:0.5rem"><strong>Gratis</strong><span class="badge badge-neutral">Via Reward</span></div>
+                <div style="font-size:0.8rem;color:var(--text-secondary);margin-top:2px">1 Laporan, PDF + Watermark, Reward 30 dtk</div>
+              </div>
+            </div>
             <div class="plan-chip selected" id="chip-pro" onclick="selectPlan('pro',this)">
               <div class="plan-chip-radio"></div>
-              <div style="font-size:1.5rem"><i data-lucide="star"></i></div>
+              <div style="font-size:1.3rem"><i data-lucide="star"></i></div>
               <div style="flex:1">
-                <div style="display:flex;align-items:center;gap:0.75rem">
-                  <strong>Pro</strong>
-                  <span class="badge badge-primary">Rp 30.000</span>
-                  <span class="badge badge-success">Terpopuler</span>
-                </div>
-                <div style="font-size:0.85rem;color:var(--text-secondary);margin-top:2px">1x Laporan, Download PDF + DOCX, Tanpa Iklan, 5x Revisi</div>
+                <div style="display:flex;align-items:center;gap:0.5rem"><strong>Pro</strong><span class="badge badge-primary">Rp 30.000</span><span class="badge badge-success">Terpopuler</span></div>
+                <div style="font-size:0.8rem;color:var(--text-secondary);margin-top:2px">1 Laporan, PDF + DOCX, Tanpa Watermark, 5x Revisi</div>
               </div>
             </div>
-
             <div class="plan-chip" id="chip-premium" onclick="selectPlan('premium',this)">
               <div class="plan-chip-radio"></div>
-              <div style="font-size:1.5rem"><i data-lucide="crown"></i></div>
+              <div style="font-size:1.3rem"><i data-lucide="crown"></i></div>
               <div style="flex:1">
-                <div style="display:flex;align-items:center;gap:0.75rem">
-                  <strong>Premium</strong>
-                  <span class="badge badge-warning">Rp 50.000</span>
-                </div>
-                <div style="font-size:0.85rem;color:var(--text-secondary);margin-top:2px">3x Laporan, PDF + DOCX, Tanpa Iklan, 10x Revisi</div>
+                <div style="display:flex;align-items:center;gap:0.5rem"><strong>Premium</strong><span class="badge badge-warning">Rp 50.000</span></div>
+                <div style="font-size:0.8rem;color:var(--text-secondary);margin-top:2px">3 Laporan, PDF + DOCX, Tanpa Watermark, 10x Revisi</div>
               </div>
             </div>
           </div>
+        </div>
 
-          <div style="margin-top:1.5rem;padding:1rem;background:var(--bg-glass);border-radius:var(--radius-md);border:1px solid var(--border)">
-            <strong><i data-lucide="clipboard-list"></i> Preview Data Kamu:</strong>
-            <div class="preview-box" id="data-preview" style="margin-top:0.75rem">—</div>
+        <div class="step-nav-btns">
+          <button class="btn btn-outline btn-lg" onclick="goStep(8)"><i data-lucide="arrow-left"></i> Kembali</button>
+          <div style="display:flex;gap:0.75rem;flex-wrap:wrap">
+            <button class="btn btn-outline btn-lg" onclick="openPreview()"><i data-lucide="eye"></i> Preview Live</button>
+            <button class="btn btn-primary btn-lg" onclick="proceedToPayment()" id="btn-proceed"><i data-lucide="credit-card"></i> Lanjut ke Pembayaran</button>
           </div>
         </div>
-        <div style="display:flex;justify-content:space-between;margin-top:1.5rem">
-          <button class="btn btn-outline btn-lg" onclick="prevStep(4)">← Kembali</button>
-          <button class="btn btn-primary btn-lg" onclick="proceedToPayment()" id="btn-checkout"><i data-lucide="credit-card"></i> Lanjut ke Pembayaran</button>
-        </div>
       </div>
+
     </div>
 
     <!-- SIDEBAR: Live Preview -->
-    <div class="sidebar-preview-wrap">
+    <div class="wizard-sidebar">
       <!-- Live Cover Preview -->
-      <div class="card" style="padding:1rem">
+      <div class="card" style="padding:1rem;margin-bottom:1rem">
         <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:0.75rem">
           <h4 style="font-size:0.9rem"><i data-lucide="eye"></i> Preview Cover</h4>
           <span class="badge badge-success" style="font-size:0.7rem">Live</span>
@@ -347,39 +530,103 @@
           <div class="cp-sub">Disusun Oleh :</div>
           <div class="cp-identity">
             <table>
-              <tr><td id="cp-lbl-nama">Nama</td><td>: <span id="cp-nama" class="cp-placeholder">Nama Lengkap</span></td></tr>
-              <tr><td id="cp-lbl-nis">NIS</td><td>: <span id="cp-nis" class="cp-placeholder">—</span></td></tr>
+              <tr><td id="cp-lbl-nis">NIS</td><td>: <span id="cp-nama" class="cp-placeholder">Nama Lengkap</span></td></tr>
+              <tr><td>NIS</td><td>: <span id="cp-nis" class="cp-placeholder">—</span></td></tr>
               <tr><td>Kelas</td><td>: <span id="cp-kelas" class="cp-placeholder">—</span></td></tr>
               <tr><td>Jurusan</td><td>: <span id="cp-jurusan" class="cp-placeholder">—</span></td></tr>
             </table>
           </div>
           <div class="cp-year" id="cp-year"></div>
         </div>
-        <div style="font-size:0.75rem;color:var(--text-muted);text-align:center;margin-top:0.5rem">Otomatis diperbarui saat kamu mengetik</div>
+        <div style="font-size:0.72rem;color:var(--text-muted);text-align:center;margin-top:0.5rem">Diperbarui otomatis saat kamu mengetik</div>
       </div>
 
-      <!-- Plan Info -->
-      <div class="card">
-        <h4 style="margin-bottom:1rem"><i data-lucide="package"></i> Paket yang Dipilih</h4>
-        <div style="text-align:center;padding:0.5rem 0">
-          <div style="font-size:2rem;margin-bottom:0.5rem" id="sidebar-plan-icon"><i data-lucide="star"></i></div>
-          <div style="font-family:var(--font-heading);font-size:1.2rem;font-weight:700" id="sidebar-plan-name">Pro</div>
-          <div style="font-size:1.6rem;font-weight:800;margin:0.5rem 0" id="sidebar-plan-price"><span class="text-gradient">Rp 30.000</span></div>
-          <div style="font-size:0.8rem;color:var(--text-secondary)" id="sidebar-plan-desc">1x Laporan + PDF + DOCX</div>
+      <!-- Progress Card -->
+      <div class="card" style="padding:1rem;margin-bottom:1rem">
+        <h4 style="margin-bottom:1rem;font-size:0.9rem"><i data-lucide="bar-chart-2"></i> Progress Pengisian</h4>
+        <div id="sidebar-progress">
+          <!-- Rendered by JS -->
         </div>
       </div>
 
-      <!-- Benefits -->
-      <div class="card">
-        <h4 style="margin-bottom:1rem"><i data-lucide="check-circle-2"></i> Yang Kamu Dapat</h4>
-        <ul style="list-style:none;display:flex;flex-direction:column;gap:0.6rem">
-          <li style="display:flex;align-items:center;gap:0.75rem;font-size:0.85rem"><span style="color:#86efac"><i data-lucide="check"></i></span> 11 Bagian Laporan Lengkap</li>
-          <li style="display:flex;align-items:center;gap:0.75rem;font-size:0.85rem"><span style="color:#86efac"><i data-lucide="check"></i></span> Kata Pengantar & Daftar Isi</li>
-          <li style="display:flex;align-items:center;gap:0.75rem;font-size:0.85rem"><span style="color:#86efac"><i data-lucide="check"></i></span> Daftar Pustaka & Lampiran</li>
-          <li style="display:flex;align-items:center;gap:0.75rem;font-size:0.85rem"><span style="color:#86efac"><i data-lucide="check"></i></span> Download DOCX & PDF</li>
-          <li style="display:flex;align-items:center;gap:0.75rem;font-size:0.85rem"><span style="color:#86efac"><i data-lucide="check"></i></span> Teks sesuai Jurusan</li>
-        </ul>
+      <!-- Tips -->
+      <div class="card" style="padding:1rem;background:rgba(124,58,237,0.05);border-color:rgba(124,58,237,0.2)">
+        <h4 style="font-size:0.85rem;margin-bottom:0.75rem;color:var(--primary-light)"><i data-lucide="lightbulb"></i> Tips</h4>
+        <p id="sidebar-tip" style="font-size:0.8rem;color:var(--text-secondary);line-height:1.6">Data kamu tersimpan otomatis. Kamu bisa menutup halaman dan melanjutkan nanti.</p>
       </div>
+    </div>
+  </div>
+</div>
+
+<!-- ACTIVITY MODAL -->
+<div class="modal-overlay" id="activityModal">
+  <div class="modal" style="max-width:620px">
+    <div class="modal-header">
+      <h3 class="modal-title"><i data-lucide="calendar-plus"></i> <span id="activity-modal-title">Tambah Kegiatan</span></h3>
+      <button class="modal-close" onclick="closeModal('activityModal')">×</button>
+    </div>
+    <div style="max-height:70vh;overflow-y:auto;padding-right:0.5rem">
+      <input type="hidden" id="activity-editing-id">
+
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">Tanggal Kegiatan *</label>
+          <input type="date" id="act-tanggal" class="form-input">
+        </div>
+        <div class="form-group">
+          <label class="form-label" id="lbl-act-jenis">Jenis Kegiatan *</label>
+          <div id="act-jenis-container">
+            <input type="text" id="act-jenis" class="form-input" placeholder="Contoh: Instalasi Windows">
+          </div>
+        </div>
+      </div>
+
+      <div class="form-group" style="margin-top:0.75rem">
+        <label class="form-label">Nama / Judul Kegiatan *</label>
+        <input type="text" id="act-name" class="form-input" placeholder="Contoh: Instalasi Windows 10 di Lab Komputer">
+      </div>
+
+      <div class="form-group" style="margin-top:0.75rem">
+        <label class="form-label">Deskripsi Kegiatan</label>
+        <textarea id="act-description" class="form-textarea" rows="3" placeholder="Deskripsikan kegiatan secara singkat..."></textarea>
+      </div>
+
+      <div class="form-row" style="margin-top:0.75rem">
+        <div class="form-group">
+          <label class="form-label">Alat yang Digunakan</label>
+          <input type="text" id="act-alat" class="form-input" placeholder="Contoh: Flashdisk, Laptop">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Bahan / Software</label>
+          <input type="text" id="act-software" class="form-input" placeholder="Contoh: ISO Windows, Rufus">
+        </div>
+      </div>
+
+      <div class="form-group" style="margin-top:0.75rem">
+        <label class="form-label">Langkah-Langkah Kerja</label>
+        <textarea id="act-steps" class="form-textarea" rows="4" placeholder="1. Siapkan flashdisk bootable&#10;2. Atur boot priority di BIOS&#10;3. Mulai proses instalasi&#10;4. ..."></textarea>
+        <div class="form-hint">Pisahkan setiap langkah dengan Enter untuk pemformatan otomatis</div>
+      </div>
+
+      <div class="form-group" style="margin-top:0.75rem">
+        <label class="form-label">Hasil Kegiatan</label>
+        <textarea id="act-result" class="form-textarea" rows="2" placeholder="Contoh: Windows berhasil diinstal dan berjalan dengan baik"></textarea>
+      </div>
+
+      <div class="form-row" style="margin-top:0.75rem">
+        <div class="form-group">
+          <label class="form-label">Kendala (jika ada)</label>
+          <textarea id="act-kendala" class="form-textarea" rows="2" placeholder="Kendala yang dihadapi..."></textarea>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Solusi</label>
+          <textarea id="act-solusi" class="form-textarea" rows="2" placeholder="Solusi yang dilakukan..."></textarea>
+        </div>
+      </div>
+    </div>
+    <div style="display:flex;justify-content:flex-end;gap:0.75rem;margin-top:1.5rem">
+      <button class="btn btn-outline" onclick="closeModal('activityModal')">Batal</button>
+      <button class="btn btn-primary" onclick="saveActivity()"><i data-lucide="save"></i> Simpan Kegiatan</button>
     </div>
   </div>
 </div>
@@ -388,21 +635,21 @@
 <div class="modal-overlay" id="loginModal">
   <div class="modal">
     <div class="modal-header">
-      <h3 class="modal-title"><i data-lucide="hand"></i> Masuk ke Akun</h3>
+      <h3 class="modal-title"><i data-lucide="log-in"></i> Masuk ke Akun</h3>
       <button class="modal-close" onclick="closeModal('loginModal')">×</button>
     </div>
     <form onsubmit="handleLogin(event)">
-      <div class="form-group">
+      <div class="form-group" style="margin-bottom:1rem">
         <label class="form-label">Email</label>
         <input type="email" id="login-email" class="form-input" placeholder="email@contoh.com" required>
       </div>
-      <div class="form-group">
+      <div class="form-group" style="margin-bottom:1.5rem">
         <label class="form-label">Password</label>
         <input type="password" id="login-password" class="form-input" placeholder="••••••••" required>
       </div>
       <button type="submit" class="btn btn-primary btn-full btn-lg">Masuk</button>
     </form>
-    <p style="text-align:center;margin-top:1.5rem;color:var(--text-secondary);font-size:0.9rem">
+    <p style="text-align:center;margin-top:1rem;color:var(--text-secondary);font-size:0.9rem">
       Belum punya akun? <button onclick="closeModal('loginModal');openModal('registerModal')" style="background:none;border:none;color:var(--primary-light);cursor:pointer;font-weight:600">Daftar sekarang</button>
     </p>
   </div>
@@ -416,238 +663,861 @@
       <button class="modal-close" onclick="closeModal('registerModal')">×</button>
     </div>
     <form onsubmit="handleRegister(event)">
-      <div class="form-group">
+      <div class="form-group" style="margin-bottom:1rem">
         <label class="form-label">Nama Lengkap</label>
         <input type="text" id="reg-name" class="form-input" placeholder="Nama lengkap kamu" required>
       </div>
-      <div class="form-group">
+      <div class="form-group" style="margin-bottom:1rem">
         <label class="form-label">Email</label>
         <input type="email" id="reg-email" class="form-input" placeholder="email@contoh.com" required>
       </div>
-      <div class="form-group">
+      <div class="form-group" style="margin-bottom:1.5rem">
         <label class="form-label">Password</label>
         <input type="password" id="reg-password" class="form-input" placeholder="Min. 6 karakter" required>
       </div>
       <button type="submit" class="btn btn-primary btn-full btn-lg">Daftar Gratis</button>
     </form>
-    <p style="text-align:center;margin-top:1.5rem;color:var(--text-secondary);font-size:0.9rem">
+    <p style="text-align:center;margin-top:1rem;color:var(--text-secondary);font-size:0.9rem">
       Sudah punya akun? <button onclick="closeModal('registerModal');openModal('loginModal')" style="background:none;border:none;color:var(--primary-light);cursor:pointer;font-weight:600">Masuk di sini</button>
     </p>
   </div>
 </div>
 
+<!-- STEP NAV BUTTONS STYLE -->
+<style>
+  .step-nav-btns {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: 1.5rem;
+    flex-wrap: wrap;
+    gap: 1rem;
+  }
+</style>
+
 <script src="scripts/app.js"></script>
+<script src="scripts/db.js"></script>
 <script>
+// ==================== STATE ====================
 let currentStep = 1;
+const TOTAL_STEPS = 9;
 let selectedPlan = 'pro';
 let selectedTemplate = 'smk-pkl';
+let selectedSchoolId = '';
+let selectedDeptId = '';
+let activities = [];
+let dynamicAnswers = {};
+let photoLimit = 20;
+let actLimit = 10;
+let editingActivityIdx = null;
 
-// Pre-select plan from URL
-const urlPlan = new URLSearchParams(window.location.search).get('plan');
-if (urlPlan && ['basic','pro','premium'].includes(urlPlan)) {
-  selectedPlan = urlPlan;
-}
-
-// ===================== TEMPLATE LOGIC =====================
 const TEMPLATE_META = {
-  'smk-pkl':      { title: 'LAPORAN PRAKTIK KERJA LAPANGAN', nisLabel: 'NIS', siswaLabel: 'Siswa', pembimbingLabel: 'Guru Pembimbing', step1Label: 'Data Siswa' },
-  'smk-prakerin': { title: 'LAPORAN PRAKTIK KERJA INDUSTRI', nisLabel: 'NIS', siswaLabel: 'Siswa', pembimbingLabel: 'Guru Pembimbing', step1Label: 'Data Siswa' },
-  'kp-kampus':    { title: 'LAPORAN KERJA PRAKTIK (KP)', nisLabel: 'NIM', siswaLabel: 'Mahasiswa', pembimbingLabel: 'Dosen Pembimbing', step1Label: 'Data Mahasiswa' },
-  'magang':       { title: 'LAPORAN MAGANG INDUSTRI', nisLabel: 'ID/NIM', siswaLabel: 'Peserta', pembimbingLabel: 'Pembimbing Lapangan', step1Label: 'Data Peserta' },
+  'smk-pkl':      { title: 'LAPORAN PRAKTIK KERJA LAPANGAN', nisLabel: 'NIS', step3Label: 'Data Diri Siswa' },
+  'smk-prakerin': { title: 'LAPORAN PRAKTIK KERJA INDUSTRI', nisLabel: 'NIS', step3Label: 'Data Diri Siswa' },
+  'kp-kampus':    { title: 'LAPORAN KERJA PRAKTIK (KP)', nisLabel: 'NIM', step3Label: 'Data Diri Mahasiswa' },
+  'magang':       { title: 'LAPORAN MAGANG INDUSTRI', nisLabel: 'ID/NIM', step3Label: 'Data Peserta' },
 };
 
-function selectTemplate(id, el) {
-  selectedTemplate = id;
-  document.querySelectorAll('.template-card').forEach(c => c.classList.remove('selected'));
-  el.classList.add('selected');
-  const meta = TEMPLATE_META[id];
-  // Update labels
-  document.getElementById('cp-title').textContent = meta.title;
-  document.getElementById('cp-lbl-nis').textContent = meta.nisLabel;
-  document.getElementById('lbl-step1').textContent = meta.step1Label;
-  // Update NIS label in form
-  const nisLabelEl = document.querySelector('label[for-id="nis"]') || document.querySelector('#nis')?.closest('.form-group')?.querySelector('.form-label');
-  if (nisLabelEl) nisLabelEl.textContent = meta.nisLabel + ' *';
-  updateLivePreview();
+const STEP_LABELS = ['Jenis Laporan','Sekolah & Jurusan','Identitas','Data PKL','Profil Perusahaan','Kegiatan','Dokumentasi','Pertanyaan','Review'];
+const STEP_TIPS = [
+  'Pilih jenis laporan yang sesuai dengan program pendidikanmu.',
+  'Pilih sekolahmu untuk mendapatkan template pertanyaan yang sesuai.',
+  'Isi data dirimu dengan lengkap. Data ini akan muncul di cover laporan.',
+  'Isi informasi tempat PKL dengan lengkap dan akurat.',
+  'Profil perusahaan akan digunakan untuk BAB II. Semakin detail semakin baik!',
+  'Tambahkan semua kegiatan PKL. Minimal 3 kegiatan untuk laporan yang baik.',
+  'Upload foto dokumentasi untuk setiap kegiatan. Foto akan otomatis masuk ke laporan.',
+  'Jawab pertanyaan tambahan berdasarkan jurusanmu untuk melengkapi isi laporan.',
+  'Review semua data sebelum melanjutkan ke pembayaran. Autosave aktif!'
+];
+
+// ==================== AUTOSAVE ====================
+const AUTOSAVE_KEY = 'joki_wizard_autosave';
+
+function saveWizardData() {
+  const data = collectAllData();
+  APP.storage.set(AUTOSAVE_KEY, { ...data, activities, dynamicAnswers, selectedTemplate, selectedSchoolId, selectedDeptId, currentStep, savedAt: new Date().toISOString() });
 }
 
-// ===================== LIVE PREVIEW =====================
+function loadWizardData() {
+  const saved = APP.storage.get(AUTOSAVE_KEY);
+  if (!saved) return;
+
+  // Restore activities and answers
+  if (saved.activities) activities = saved.activities;
+  if (saved.coverPhoto) {
+    coverPhotoData = saved.coverPhoto;
+    // UI restoration logic could be added here if needed
+  }
+  if (saved.dynamicAnswers) dynamicAnswers = saved.dynamicAnswers;
+  if (saved.selectedTemplate) { selectedTemplate = saved.selectedTemplate; selectTemplate(selectedTemplate, document.querySelector(`[data-tpl="${selectedTemplate}"]`), false); }
+  if (saved.selectedSchoolId) selectedSchoolId = saved.selectedSchoolId;
+  if (saved.selectedDeptId) selectedDeptId = saved.selectedDeptId;
+
+  // Restore form fields
+  const fields = ['namaSiswa','nis','kelas','guruPembimbing','kepalaSekolah','kotaSekolah','namaPerusahaan','alamatPerusahaan','bidangUsaha','namaPembimbing','jabatanPembimbing','tanggalMulai','tanggalSelesai','sejarahPerusahaan','visiPerusahaan','misiPerusahaan','sekolah','kota','jurusan'];
+  fields.forEach(id => {
+    const el = document.getElementById(id);
+    if (el && saved[id]) el.value = saved[id];
+  });
+
+  // Restore school/dept select
+  setTimeout(() => {
+    const schoolSel = document.getElementById('schoolSelect');
+    if (schoolSel && saved.selectedSchoolId) {
+      schoolSel.value = saved.selectedSchoolId;
+      onSchoolChange(false);
+      setTimeout(() => {
+        const deptSel = document.getElementById('deptSelect');
+        if (deptSel && saved.selectedDeptId) deptSel.value = saved.selectedDeptId;
+        if (saved.selectedDeptId) onDeptChange();
+      }, 100);
+    }
+  }, 100);
+}
+
+// ==================== STEP NAVIGATION ====================
+function renderStepsNav() {
+  const container = document.getElementById('steps-nav');
+  let html = '';
+  for (let i = 1; i <= TOTAL_STEPS; i++) {
+    const isActive = i === currentStep;
+    const isCompleted = i < currentStep;
+    const statusClass = isActive ? 'active' : isCompleted ? 'completed' : '';
+    html += `<div class="step-item ${statusClass}" id="step-${i}-indicator" onclick="if(${i} < ${currentStep+1}) goStep(${i})">
+      <div class="step-circle">${isCompleted ? '<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg>' : i}</div>
+      <div class="step-label">${STEP_LABELS[i - 1]}</div>
+    </div>`;
+    if (i < TOTAL_STEPS) {
+      html += `<div class="step-connector ${isCompleted ? 'active' : ''}" id="conn-${i}"></div>`;
+    }
+  }
+  container.innerHTML = html;
+
+  // Progress fill
+  const pct = ((currentStep - 1) / (TOTAL_STEPS - 1)) * 100;
+  const fill = document.getElementById('step-progress-fill');
+  if (fill) fill.style.width = pct + '%';
+
+  // Tip
+  const tipEl = document.getElementById('sidebar-tip');
+  if (tipEl) tipEl.textContent = STEP_TIPS[currentStep - 1] || '';
+}
+
+function goStep(target) {
+  if (target > currentStep) {
+    if (!validateStep(currentStep)) return;
+  }
+
+  document.getElementById(`step-${currentStep}`)?.classList.remove('active');
+  currentStep = target;
+  document.getElementById(`step-${currentStep}`)?.classList.add('active');
+  renderStepsNav();
+
+  // Step-specific init
+  if (currentStep === 7) renderPhotoSection();
+  if (currentStep === 8) renderDynamicQuestions();
+  if (currentStep === 9) renderReviewStep();
+
+  updateLivePreview();
+  updateSidebarProgress();
+  saveWizardData();
+  window.scrollTo({ top: 180, behavior: 'smooth' });
+
+  if (typeof lucide !== 'undefined') lucide.createIcons();
+}
+
+// ==================== VALIDATION ====================
+function validateStep(step) {
+  const required = {
+    3: ['namaSiswa', 'nis', 'kelas'],
+    4: ['namaPerusahaan', 'alamatPerusahaan', 'bidangUsaha', 'namaPembimbing', 'tanggalMulai', 'tanggalSelesai']
+  };
+
+  const fields = required[step] || [];
+  let valid = true;
+  fields.forEach(id => {
+    const el = document.getElementById(id);
+    if (!el) return;
+    const group = el.closest('.form-group');
+    if (!el.value.trim()) {
+      group?.classList.add('has-error');
+      valid = false;
+    } else {
+      group?.classList.remove('has-error');
+    }
+  });
+
+  if (!valid) { APP.notify('Mohon lengkapi field yang wajib diisi (*)!', 'error'); }
+
+  // Date validation
+  if (step === 4 && valid) {
+    const start = new Date(document.getElementById('tanggalMulai')?.value);
+    const end = new Date(document.getElementById('tanggalSelesai')?.value);
+    if (start >= end) { APP.notify('Tanggal selesai harus setelah tanggal mulai!', 'error'); return false; }
+  }
+
+  return valid;
+}
+
+// ==================== TEMPLATE SELECTION ====================
+function selectTemplate(id, el, render = true) {
+  selectedTemplate = id;
+  if (el) {
+    document.querySelectorAll('.template-card').forEach(c => c.classList.remove('selected'));
+    el.classList.add('selected');
+  }
+  const meta = TEMPLATE_META[id] || TEMPLATE_META['smk-pkl'];
+  const titleEl = document.getElementById('cp-title');
+  if (titleEl) titleEl.textContent = meta.title;
+  const nisLbl = document.getElementById('cp-lbl-nis');
+  if (nisLbl) nisLbl.textContent = meta.nisLabel;
+  const step3title = document.getElementById('lbl-step3-title');
+  if (step3title) step3title.textContent = meta.step3Label;
+  const nisFormLbl = document.getElementById('lbl-nis-form');
+  if (nisFormLbl) nisFormLbl.textContent = meta.nisLabel + ' *';
+  if (render) updateLivePreview();
+}
+
+// ==================== SCHOOL / DEPT ====================
+function populateSchools() {
+  const sel = document.getElementById('schoolSelect');
+  if (!sel) return;
+  const schools = DB.schools.getAll();
+  sel.innerHTML = '<option value="">-- Pilih Sekolah --</option>';
+  schools.forEach(s => {
+    sel.innerHTML += `<option value="${s.id}">${s.name}</option>`;
+  });
+}
+
+function onSchoolChange(doUpdate = true) {
+  const schoolSel = document.getElementById('schoolSelect');
+  const deptGroup = document.getElementById('dept-group');
+  const customGroup = document.getElementById('custom-school-group');
+  const schoolId = schoolSel?.value;
+  selectedSchoolId = schoolId;
+
+  if (!schoolId) {
+    if (deptGroup) deptGroup.style.display = 'none';
+    if (customGroup) customGroup.style.display = 'none';
+    return;
+  }
+
+  const school = DB.schools.getById(schoolId);
+  const depts = DB.departments.getBySchool(schoolId);
+
+  if (schoolId === 'sch_custom' || !school) {
+    if (deptGroup) deptGroup.style.display = 'none';
+    if (customGroup) customGroup.style.display = 'block';
+    return;
+  }
+
+  if (customGroup) customGroup.style.display = 'none';
+
+  // Auto-fill sekolah & kota fields
+  const sekolahEl = document.getElementById('sekolah');
+  if (sekolahEl) sekolahEl.value = school.name;
+  const kotaEl = document.getElementById('kotaSekolah');
+  if (kotaEl) kotaEl.value = school.city;
+
+  if (deptGroup) deptGroup.style.display = 'block';
+  const deptSel = document.getElementById('deptSelect');
+  if (!deptSel) return;
+  deptSel.innerHTML = '<option value="">-- Pilih Jurusan --</option>';
+  depts.forEach(d => {
+    deptSel.innerHTML += `<option value="${d.id}">${d.name} (${d.shortName})</option>`;
+  });
+
+  if (doUpdate) updateLivePreview();
+}
+
+function onDeptChange() {
+  const deptSel = document.getElementById('deptSelect');
+  const deptId = deptSel?.value;
+  selectedDeptId = deptId;
+
+  if (deptId) {
+    const dept = DB.departments.getById(deptId);
+    if (dept) {
+      const jurusanEl = document.getElementById('jurusan');
+      if (jurusanEl) jurusanEl.value = dept.name;
+    }
+  }
+  updateLivePreview();
+  saveWizardData();
+}
+
+// ==================== LIVE PREVIEW ====================
+const debouncedPreview = APP.debounce(updateLivePreview, 300);
+
 function updateLivePreview() {
   const get = id => (document.getElementById(id)?.value || '').trim();
   const tplMeta = TEMPLATE_META[selectedTemplate] || TEMPLATE_META['smk-pkl'];
-  const year = new Date().getFullYear();
 
   const setEl = (id, val, placeholder) => {
     const el = document.getElementById(id);
     if (!el) return;
-    if (val) {
-      el.textContent = val;
-      el.classList.remove('cp-placeholder');
-    } else {
-      el.textContent = placeholder;
-      el.classList.add('cp-placeholder');
-    }
+    el.textContent = val || placeholder;
+    el.classList.toggle('cp-placeholder', !val);
   };
 
   document.getElementById('cp-title').textContent = tplMeta.title;
   document.getElementById('cp-lbl-nis').textContent = tplMeta.nisLabel;
-  setEl('cp-sekolah', get('sekolah'), 'Nama Sekolah / Universitas');
+
+  // Get school name
+  const schoolSel = document.getElementById('schoolSelect');
+  const schoolId = schoolSel?.value;
+  const school = schoolId && schoolId !== 'sch_custom' ? DB.schools.getById(schoolId) : null;
+  const schoolName = school?.name || get('sekolah');
+
+  setEl('cp-sekolah', schoolName, 'Nama Sekolah');
   setEl('cp-perusahaan', get('namaPerusahaan'), 'Nama Perusahaan / Instansi');
   setEl('cp-alamat', get('alamatPerusahaan'), 'Alamat Perusahaan');
   setEl('cp-nama', get('namaSiswa'), 'Nama Lengkap');
   setEl('cp-nis', get('nis'), '—');
   setEl('cp-kelas', get('kelas'), '—');
-  setEl('cp-jurusan', get('jurusan'), '—');
-  document.getElementById('cp-year').textContent = get('sekolah') ? `Tahun Pelajaran ${year}/${year+1}` : '';
-}
 
+  // Dept/jurusan
+  const deptSel = document.getElementById('deptSelect');
+  const deptId = deptSel?.value;
+  const dept = deptId ? DB.departments.getById(deptId) : null;
+  const jurusanVal = dept?.name || get('jurusan');
+  setEl('cp-jurusan', jurusanVal, '—');
 
-function renderWeekRows() {
-  const n = parseInt(document.getElementById('jumlahMinggu').value);
-  const container = document.getElementById('week-rows-container');
-  container.innerHTML = '';
-  for (let i = 1; i <= n; i++) {
-    container.innerHTML += `
-      <div class="week-row">
-        <div>
-          <label class="form-label">Minggu ${i}</label>
-          <input type="date" id="week-${i}-date" class="form-input" placeholder="Tanggal">
-        </div>
-        <div>
-          <label class="form-label">Kegiatan Minggu ${i}</label>
-          <textarea id="week-${i}-kegiatan" class="form-textarea" rows="2" placeholder="Ceritakan kegiatan yang kamu lakukan pada minggu ke-${i}..."></textarea>
-        </div>
-      </div>`;
+  const yearEl = document.getElementById('cp-year');
+  if (yearEl) {
+    const nm = get('tanggalMulai');
+    if (nm) {
+      const y = new Date(nm).getFullYear();
+      yearEl.textContent = `Tahun Pelajaran ${y}/${y+1}`;
+    } else { yearEl.textContent = ''; }
   }
 }
 
+// ==================== SIDEBAR PROGRESS ====================
+function updateSidebarProgress() {
+  const get = id => (document.getElementById(id)?.value || '').trim();
+  const checks = [
+    { label: 'Identitas Siswa', ok: !!(get('namaSiswa') && get('nis') && get('kelas')) },
+    { label: 'Data PKL', ok: !!(get('namaPerusahaan') && get('tanggalMulai') && get('tanggalSelesai')) },
+    { label: 'Profil Perusahaan', ok: !!(get('sejarahPerusahaan') || get('bidangUsaha')) },
+    { label: 'Kegiatan PKL', ok: activities.length > 0 },
+    { label: 'Foto Dokumentasi', ok: activities.some(a => a.photos && a.photos.length > 0) },
+    { label: 'Pertanyaan', ok: Object.keys(dynamicAnswers).length > 0 },
+  ];
+
+  const filled = checks.filter(c => c.ok).length;
+  const pct = Math.round((filled / checks.length) * 100);
+
+  let html = `<div style="display:flex;align-items:center;gap:0.75rem;margin-bottom:1rem">
+    <div style="flex:1;height:8px;background:var(--border);border-radius:4px;overflow:hidden">
+      <div style="width:${pct}%;height:100%;background:var(--grad-primary);border-radius:4px;transition:width 0.5s ease"></div>
+    </div>
+    <span style="font-size:0.8rem;font-weight:700;color:var(--primary-light)">${pct}%</span>
+  </div>`;
+
+  checks.forEach(c => {
+    html += `<div style="display:flex;align-items:center;gap:0.5rem;margin-bottom:0.4rem;font-size:0.8rem">
+      <span style="width:16px;height:16px;border-radius:50%;background:${c.ok ? 'rgba(34,197,94,0.15)' : 'rgba(255,255,255,0.05)'};color:${c.ok ? '#86efac' : 'var(--text-muted)'};display:flex;align-items:center;justify-content:center;flex-shrink:0">
+        ${c.ok ? '✓' : '○'}
+      </span>
+      <span style="color:${c.ok ? 'var(--text-primary)' : 'var(--text-muted)'}">${c.label}</span>
+    </div>`;
+  });
+
+  const el = document.getElementById('sidebar-progress');
+  if (el) el.innerHTML = html;
+}
+
+// ==================== ACTIVITY CRUD ====================
+function openActivityModal(idx = null) {
+  const plan = APP.getPlan();
+  if (idx === null && activities.length >= (plan.maxActivities === -1 ? 9999 : plan.maxActivities)) {
+    APP.notify(`Batas maksimal ${plan.maxActivities} kegiatan untuk paket ${plan.name}. Upgrade untuk menambah lebih banyak!`, 'warning');
+    return;
+  }
+
+  editingActivityIdx = idx;
+  const modal = document.getElementById('activityModal');
+  const titleEl = document.getElementById('activity-modal-title');
+
+  // Clear fields
+  ['act-tanggal','act-jenis','act-name','act-description','act-alat','act-software','act-steps','act-result','act-kendala','act-solusi'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.value = '';
+  });
+
+  // Render dynamic jenis select based on dept
+  renderActivityJenisField();
+
+  if (idx !== null) {
+    titleEl.textContent = 'Edit Kegiatan';
+    const act = activities[idx];
+    document.getElementById('act-tanggal').value = act.tanggal || '';
+    document.getElementById('act-name').value = act.name || '';
+    document.getElementById('act-description').value = act.description || '';
+    document.getElementById('act-alat').value = act.alat || '';
+    document.getElementById('act-software').value = act.software || '';
+    document.getElementById('act-steps').value = act.steps || '';
+    document.getElementById('act-result').value = act.result || '';
+    document.getElementById('act-kendala').value = act.kendala || '';
+    document.getElementById('act-solusi').value = act.solusi || '';
+    // Jenis
+    const jenisEl = document.getElementById('act-jenis');
+    if (jenisEl) jenisEl.value = act.jenis || act.name || '';
+  } else {
+    titleEl.textContent = 'Tambah Kegiatan';
+  }
+
+  modal.classList.add('active');
+  if (typeof lucide !== 'undefined') lucide.createIcons();
+}
+
+function renderActivityJenisField() {
+  const container = document.getElementById('act-jenis-container');
+  if (!container) return;
+
+  const deptId = selectedDeptId;
+  const dept = deptId ? DB.departments.getById(deptId) : null;
+  const templateId = dept?.templateId;
+
+  if (templateId) {
+    const jenisQuestion = DB.questions.getByTemplateAndSection(templateId, 'activities').find(q => q.type === 'select');
+    if (jenisQuestion) {
+      const opts = DB.questionOptions.getByQuestion(jenisQuestion.id);
+      if (opts.length > 0) {
+        container.innerHTML = `<select id="act-jenis" class="form-select">
+          <option value="">-- Pilih Jenis Kegiatan --</option>
+          ${opts.map(o => `<option value="${o.value}">${o.label}</option>`).join('')}
+          <option value="_lainnya">Lainnya (Tulis Manual)</option>
+        </select>
+        <input type="text" id="act-jenis-other" class="form-input" placeholder="Tuliskan jenis kegiatan..." style="display:none;margin-top:0.5rem">`;
+
+        document.getElementById('act-jenis')?.addEventListener('change', function() {
+          const other = document.getElementById('act-jenis-other');
+          if (other) other.style.display = this.value === '_lainnya' ? 'block' : 'none';
+        });
+        return;
+      }
+    }
+  }
+
+  container.innerHTML = `<input type="text" id="act-jenis" class="form-input" placeholder="Contoh: Instalasi Software, Troubleshooting">`;
+}
+
+function saveActivity() {
+  const name = document.getElementById('act-name')?.value?.trim();
+  if (!name) { APP.notify('Nama kegiatan wajib diisi!', 'error'); return; }
+
+  let jenis = document.getElementById('act-jenis')?.value?.trim();
+  if (jenis === '_lainnya') jenis = document.getElementById('act-jenis-other')?.value?.trim() || '';
+
+  const act = {
+    id: editingActivityIdx !== null ? (activities[editingActivityIdx]?.id || APP.generateId('act')) : APP.generateId('act'),
+    tanggal: document.getElementById('act-tanggal')?.value || '',
+    jenis: jenis || name,
+    name,
+    description: document.getElementById('act-description')?.value?.trim() || '',
+    alat: document.getElementById('act-alat')?.value?.trim() || '',
+    software: document.getElementById('act-software')?.value?.trim() || '',
+    steps: document.getElementById('act-steps')?.value?.trim() || '',
+    result: document.getElementById('act-result')?.value?.trim() || '',
+    kendala: document.getElementById('act-kendala')?.value?.trim() || '',
+    solusi: document.getElementById('act-solusi')?.value?.trim() || '',
+    photos: editingActivityIdx !== null ? (activities[editingActivityIdx]?.photos || []) : []
+  };
+
+  if (editingActivityIdx !== null) {
+    activities[editingActivityIdx] = act;
+    APP.notify('Kegiatan berhasil diperbarui!', 'success');
+  } else {
+    activities.push(act);
+    APP.notify('Kegiatan berhasil ditambahkan!', 'success');
+  }
+
+  closeModal('activityModal');
+  renderActivityList();
+  updateActivityCount();
+  updateSidebarProgress();
+  saveWizardData();
+}
+
+function deleteActivity(idx) {
+  APP.confirm('Hapus kegiatan ini?', () => {
+    activities.splice(idx, 1);
+    renderActivityList();
+    updateActivityCount();
+    saveWizardData();
+    APP.notify('Kegiatan dihapus', 'info');
+  });
+}
+
+function renderActivityList() {
+  const container = document.getElementById('activity-list');
+  const emptyEl = document.getElementById('activity-empty');
+  if (!container) return;
+
+  if (activities.length === 0) {
+    if (emptyEl) emptyEl.style.display = 'block';
+    // Remove all activity cards
+    container.querySelectorAll('.activity-card').forEach(c => c.remove());
+    return;
+  }
+
+  if (emptyEl) emptyEl.style.display = 'none';
+  container.querySelectorAll('.activity-card').forEach(c => c.remove());
+
+  activities.forEach((act, idx) => {
+    const card = document.createElement('div');
+    card.className = 'activity-card';
+    card.innerHTML = `
+      <div class="activity-header">
+        <div style="display:flex;align-items:center;gap:0.75rem;flex:1">
+          <div class="activity-number">${idx + 1}</div>
+          <div>
+            <div class="activity-title">${APP.escapeHtml(act.name)}</div>
+            <div class="activity-date">${act.tanggal ? APP.formatDate(act.tanggal) : 'Tanggal belum diisi'} · ${act.photos?.length || 0} foto</div>
+          </div>
+        </div>
+        <div class="activity-actions">
+          <button class="activity-btn activity-btn-edit" onclick="openActivityModal(${idx})" title="Edit">
+            <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+          </button>
+          <button class="activity-btn activity-btn-del" onclick="deleteActivity(${idx})" title="Hapus">
+            <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg>
+          </button>
+        </div>
+      </div>
+      ${act.description ? `<p style="font-size:0.82rem;color:var(--text-muted);margin-top:0.25rem">${APP.escapeHtml(act.description.substring(0, 120))}${act.description.length > 120 ? '...' : ''}</p>` : ''}
+      ${(act.photos || []).length > 0 ? `<div class="photo-grid" style="margin-top:0.5rem">${act.photos.map((p,pi) => `<div class="photo-thumb"><img src="${p.data}" alt="foto ${pi+1}" title="${p.caption || ''}"></div>`).join('')}</div>` : ''}
+    `;
+    container.appendChild(card);
+  });
+}
+
+function updateActivityCount() {
+  const plan = APP.getPlan();
+  const limit = plan.maxActivities === -1 ? '∞' : plan.maxActivities;
+  const countEl = document.getElementById('act-count');
+  const limitEl = document.getElementById('act-limit');
+  if (countEl) countEl.textContent = activities.length;
+  if (limitEl) limitEl.textContent = limit;
+}
+
+// ==================== PHOTO SECTION (STEP 7) ====================
+function renderPhotoSection() {
+  const container = document.getElementById('photo-per-activity');
+  if (!container) return;
+
+  if (activities.length === 0) {
+    container.innerHTML = `<div class="empty-state">
+      <div class="empty-state-icon"><i data-lucide="images" style="width:48px;height:48px"></i></div>
+      <div class="empty-state-title">Belum ada lampiran kegiatan</div>
+      <div class="empty-state-desc">Tambahkan kegiatan di Step 6 terlebih dahulu untuk memunculkan kolom unggah Foto Lampiran (Kegiatan)</div>
+    </div>`;
+    if (typeof lucide !== 'undefined') lucide.createIcons();
+    return;
+  }
+
+  container.innerHTML = activities.map((act, idx) => `
+    <div class="card" style="margin-bottom:1rem">
+      <div style="display:flex;align-items:center;gap:0.75rem;margin-bottom:1rem">
+        <div class="activity-number">${idx + 1}</div>
+        <div>
+          <div style="font-weight:600">Lampiran ${idx + 1}: ${APP.escapeHtml(act.name)}</div>
+          <div style="font-size:0.8rem;color:var(--text-muted)">${(act.photos || []).length} foto ditambahkan</div>
+        </div>
+      </div>
+
+      <!-- Drop zone -->
+      <div class="photo-upload-area" id="drop-${idx}" onclick="document.getElementById('file-input-${idx}').click()">
+        <div style="font-size:2rem;margin-bottom:0.5rem;color:var(--text-muted)">
+          <svg xmlns="http://www.w3.org/2000/svg" width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" style="margin:0 auto"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
+        </div>
+        <div style="font-weight:600;margin-bottom:0.25rem">Klik atau drag & drop foto</div>
+        <div style="font-size:0.8rem;color:var(--text-muted)">JPG, PNG, WEBP • Maks. 5MB per foto</div>
+        <div style="font-size:0.75rem;color:var(--primary);margin-top:0.5rem;font-weight:500">Tampil di BAB III dan Lampiran</div>
+      </div>
+      <input type="file" id="file-input-${idx}" accept="image/*" multiple style="display:none" onchange="handlePhotoUpload(${idx}, this)">
+
+      <!-- Photo preview grid -->
+      <div class="photo-preview-grid" id="photo-grid-${idx}">
+        ${(act.photos || []).map((p, pi) => photoThumbHtml(idx, pi, p)).join('')}
+      </div>
+    </div>
+  `).join('');
+
+  // Setup drag & drop
+  activities.forEach((_, idx) => {
+    const dz = document.getElementById(`drop-${idx}`);
+    if (!dz) return;
+    dz.addEventListener('dragover', e => { e.preventDefault(); dz.classList.add('drag-over'); });
+    dz.addEventListener('dragleave', () => dz.classList.remove('drag-over'));
+    dz.addEventListener('drop', e => {
+      e.preventDefault();
+      dz.classList.remove('drag-over');
+      handlePhotoFiles(idx, Array.from(e.dataTransfer.files));
+    });
+  });
+
+  if (typeof lucide !== 'undefined') lucide.createIcons();
+}
+
+function handleCoverUpload(input) {
+  if (!input.files || input.files.length === 0) return;
+  const file = input.files[0];
+  if (file.size > 5 * 1024 * 1024) {
+    APP.notify('Ukuran foto maksimal 5MB', 'error');
+    return;
+  }
+  
+  const reader = new FileReader();
+  reader.onload = (e) => {
+    coverPhotoData = e.target.result;
+    document.getElementById('cover-photo-status').textContent = '1 foto ditambahkan';
+    document.getElementById('photo-grid-cover').innerHTML = `
+      <div class="photo-thumb" style="width:120px;height:120px;margin:0 auto">
+        <img src="${coverPhotoData}" alt="cover">
+        <div class="photo-thumb-remove" onclick="removeCoverPhoto(event)">
+          <i data-lucide="x"></i>
+        </div>
+      </div>
+    `;
+    lucide.createIcons();
+    saveWizardData();
+  };
+  reader.readAsDataURL(file);
+}
+
+function removeCoverPhoto(e) {
+  e.stopPropagation();
+  coverPhotoData = null;
+  document.getElementById('cover-photo-status').textContent = 'Belum ada foto (Pakai logo baku)';
+  document.getElementById('photo-grid-cover').innerHTML = '';
+  saveWizardData();
+}
+
+function photoThumbHtml(actIdx, photoIdx, photo) {
+  return `<div class="photo-preview-item" id="photo-item-${actIdx}-${photoIdx}">
+    <img src="${photo.data}" alt="foto">
+    <button class="photo-remove-btn" onclick="removePhoto(${actIdx}, ${photoIdx})">×</button>
+    <input class="photo-caption-input" type="text" placeholder="Caption..." value="${APP.escapeHtml(photo.caption || '')}"
+      onchange="activities[${actIdx}].photos[${photoIdx}].caption = this.value; saveWizardData()">
+  </div>`;
+}
+
+async function handlePhotoUpload(actIdx, input) {
+  handlePhotoFiles(actIdx, Array.from(input.files));
+  input.value = '';
+}
+
+function handlePhotoFiles(actIdx, files) {
+  const plan = APP.getPlan();
+  const totalPhotos = activities.reduce((s, a) => s + (a.photos || []).length, 0);
+  const maxPhotos = plan.maxPhotos === -1 ? 9999 : plan.maxPhotos;
+
+  const remaining = maxPhotos - totalPhotos;
+  if (remaining <= 0) {
+    APP.notify(`Batas foto (${maxPhotos}) sudah tercapai. Upgrade paket untuk lebih banyak foto!`, 'warning');
+    return;
+  }
+
+  const toProcess = files.filter(f => f.type.startsWith('image/')).slice(0, remaining);
+
+  toProcess.forEach(file => {
+    if (file.size > 5 * 1024 * 1024) { APP.notify(`File ${file.name} terlalu besar (maks. 5MB)`, 'warning'); return; }
+    const reader = new FileReader();
+    reader.onload = e => {
+      if (!activities[actIdx].photos) activities[actIdx].photos = [];
+      activities[actIdx].photos.push({ data: e.target.result, caption: '', fileName: file.name });
+      rerenderPhotoGrid(actIdx);
+      updateSidebarProgress();
+      saveWizardData();
+    };
+    reader.readAsDataURL(file);
+  });
+}
+
+function removePhoto(actIdx, photoIdx) {
+  activities[actIdx].photos.splice(photoIdx, 1);
+  rerenderPhotoGrid(actIdx);
+  saveWizardData();
+}
+
+function rerenderPhotoGrid(actIdx) {
+  const grid = document.getElementById(`photo-grid-${actIdx}`);
+  if (!grid) return;
+  grid.innerHTML = (activities[actIdx].photos || []).map((p, pi) => photoThumbHtml(actIdx, pi, p)).join('');
+  // Update count display
+  const act = activities[actIdx];
+  const card = grid.closest('.card');
+  if (card) {
+    const countEl = card.querySelector('.activity-number + div > div:last-child');
+    if (countEl) countEl.textContent = `${(act.photos || []).length} foto ditambahkan`;
+  }
+}
+
+// ==================== DYNAMIC QUESTIONS (STEP 8) ====================
+function renderDynamicQuestions() {
+  const container = document.getElementById('dynamic-questions');
+  if (!container) return;
+
+  const deptId = selectedDeptId;
+  const dept = deptId ? DB.departments.getById(deptId) : null;
+  const templateId = dept?.templateId;
+
+  if (!templateId) {
+    container.innerHTML = `<div style="text-align:center;padding:2rem;color:var(--text-muted)">Pilih jurusan di Step 2 terlebih dahulu</div>`;
+    return;
+  }
+
+  const conclusionQs = DB.questions.getByTemplateAndSection(templateId, 'conclusion');
+
+  if (conclusionQs.length === 0) {
+    container.innerHTML = `<div style="text-align:center;padding:2rem;color:var(--text-muted)">Tidak ada pertanyaan tambahan untuk jurusan ini</div>`;
+    return;
+  }
+
+  let html = '';
+  conclusionQs.forEach(q => {
+    const saved = dynamicAnswers[q.id] || '';
+    html += `<div class="form-group" style="margin-bottom:1.25rem">
+      <label class="form-label">${q.label}${q.required ? ' *' : ''}</label>
+      ${q.type === 'textarea'
+        ? `<textarea id="dq-${q.id}" class="form-textarea" rows="4" placeholder="${q.placeholder || ''}" onchange="saveDynamicAnswer('${q.id}', this.value)">${APP.escapeHtml(saved)}</textarea>`
+        : `<input type="text" id="dq-${q.id}" class="form-input" placeholder="${q.placeholder || ''}" value="${APP.escapeHtml(saved)}" onchange="saveDynamicAnswer('${q.id}', this.value)">`
+      }
+    </div>`;
+  });
+
+  container.innerHTML = html;
+}
+
+function saveDynamicAnswer(qId, value) {
+  dynamicAnswers[qId] = value;
+  saveWizardData();
+}
+
+// ==================== REVIEW STEP (STEP 9) ====================
+function renderReviewStep() {
+  const data = collectAllData();
+
+  // Validation
+  const checks = [
+    { label: 'Identitas siswa', ok: !!(data.namaSiswa && data.nis && data.kelas), type: data.namaSiswa ? 'ok' : 'err' },
+    { label: 'Data PKL (perusahaan, periode)', ok: !!(data.namaPerusahaan && data.tanggalMulai && data.tanggalSelesai), type: data.namaPerusahaan ? 'ok' : 'err' },
+    { label: 'Kegiatan PKL', ok: activities.length > 0, type: activities.length > 0 ? 'ok' : 'warn' },
+    { label: 'Foto dokumentasi', ok: activities.some(a => a.photos?.length > 0), type: activities.some(a => a.photos?.length > 0) ? 'ok' : 'warn' },
+  ];
+
+  const icons = {
+    ok: '<svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>',
+    err: '<svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>',
+    warn: '<svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>'
+  };
+
+  const validEl = document.getElementById('validation-result');
+  if (validEl) {
+    validEl.innerHTML = `
+      <h4 style="margin-bottom:0.75rem;font-size:0.95rem">Cek Kelengkapan Data</h4>
+      <ul class="validation-list">
+        ${checks.map(c => `
+          <li class="validation-item ${c.type}">
+            <span class="vicon">${icons[c.type]}</span>
+            <span>${c.label}</span>
+          </li>`).join('')}
+      </ul>`;
+  }
+
+  // Data summary
+  const summaryEl = document.getElementById('data-summary');
+  if (summaryEl) {
+    summaryEl.innerHTML = `
+      <strong>Siswa:</strong> ${data.namaSiswa || '-'}<br>
+      <strong>NIS/NIM:</strong> ${data.nis || '-'} | <strong>Kelas:</strong> ${data.kelas || '-'}<br>
+      <strong>Jurusan:</strong> ${data.jurusan || '-'}<br>
+      <strong>Sekolah:</strong> ${data.sekolah || '-'}<br><br>
+      <strong>Perusahaan:</strong> ${data.namaPerusahaan || '-'}<br>
+      <strong>Pembimbing:</strong> ${data.namaPembimbing || '-'}<br>
+      <strong>Periode:</strong> ${data.tanggalMulai ? APP.formatDate(data.tanggalMulai) : '-'} s.d. ${data.tanggalSelesai ? APP.formatDate(data.tanggalSelesai) : '-'}<br><br>
+      <strong>Kegiatan:</strong> ${activities.length} kegiatan<br>
+      <strong>Foto:</strong> ${activities.reduce((s,a) => s + (a.photos || []).length, 0)} foto
+    `;
+  }
+
+  // Reset plan chips
+  document.querySelectorAll('.plan-chip').forEach(c => c.classList.remove('selected'));
+  const activeChip = document.getElementById(`chip-${selectedPlan}`);
+  if (activeChip) activeChip.classList.add('selected');
+}
+
+// ==================== DATA COLLECTION ====================
+function collectAllData() {
+  const get = id => (document.getElementById(id)?.value || '').trim();
+
+  // Get school/dept info
+  const schoolId = document.getElementById('schoolSelect')?.value;
+  const deptId = document.getElementById('deptSelect')?.value;
+  const school = schoolId && schoolId !== 'sch_custom' ? DB.schools.getById(schoolId) : null;
+  const dept = deptId ? DB.departments.getById(deptId) : null;
+
+  return {
+    // Template
+    templateType: selectedTemplate,
+    templateId: dept?.templateId || 'tpl_generic',
+
+    // School/Dept
+    schoolId,
+    deptId,
+    sekolah: school?.name || get('sekolah'),
+    kota: school?.city || get('kotaSekolah'),
+    jurusan: dept?.name || get('jurusan'),
+
+    // Student
+    namaSiswa: get('namaSiswa'),
+    nis: get('nis'),
+    kelas: get('kelas'),
+    guruPembimbing: get('guruPembimbing'),
+    kepalaSekolah: get('kepalaSekolah'),
+
+    // Company
+    namaPerusahaan: get('namaPerusahaan'),
+    alamatPerusahaan: get('alamatPerusahaan'),
+    bidangUsaha: get('bidangUsaha'),
+    namaPembimbing: get('namaPembimbing'),
+    jabatanPembimbing: get('jabatanPembimbing'),
+    sejarahPerusahaan: get('sejarahPerusahaan'),
+    visiPerusahaan: get('visiPerusahaan'),
+    misiPerusahaan: get('misiPerusahaan'),
+
+    // Period
+    tanggalMulai: get('tanggalMulai'),
+    tanggalSelesai: get('tanggalSelesai'),
+
+    // Activities & photos
+    activities,
+
+    // Dynamic answers
+    answers: dynamicAnswers,
+
+    // Meta
+    createdAt: new Date().toISOString()
+  };
+}
+
+// ==================== PLAN SELECTION ====================
 function selectPlan(id, el) {
   selectedPlan = id;
   document.querySelectorAll('.plan-chip').forEach(c => c.classList.remove('selected'));
   el.classList.add('selected');
-
-  const plans = {
-    basic: { icon: '<i data-lucide="file"></i>', name: 'Basic', price: 'Rp 15.000', desc: '1x Laporan + PDF' },
-    pro: { icon: '<i data-lucide="star"></i>', name: 'Pro', price: 'Rp 35.000', desc: '1x Laporan + PDF + DOCX' },
-    premium: { icon: '<i data-lucide="crown"></i>', name: 'Premium', price: 'Rp 75.000', desc: '3x Laporan + PDF + DOCX + 2x Revisi' }
-  };
-  const p = plans[id];
-  document.getElementById('sidebar-plan-icon').textContent = p.icon;
-  document.getElementById('sidebar-plan-name').textContent = p.name;
-  document.getElementById('sidebar-plan-price').innerHTML = `<span class="text-gradient">${p.price}</span>`;
-  document.getElementById('sidebar-plan-desc').textContent = p.desc;
 }
 
-function updateStepIndicators(step) {
-  for (let i = 1; i <= 4; i++) {
-    const ind = document.getElementById(`step-${i}-indicator`);
-    ind.classList.remove('active','completed');
-    if (i < step) ind.classList.add('completed');
-    if (i === step) ind.classList.add('active');
-    if (i < 4) {
-      const conn = document.getElementById(`conn-${i}`);
-      conn.classList.toggle('active', i < step);
-    }
-  }
-}
-
-function validateStep(step) {
-  let valid = true;
-  let missingField = false;
-  const fields = {
-    1: ['namaSiswa','nis','kelas','jurusan','sekolah'],
-    2: ['namaPerusahaan','alamatPerusahaan','bidangUsaha','namaPembimbing','tanggalMulai','tanggalSelesai'],
-    3: [],
-    4: []
-  };
-  fields[step].forEach(id => {
-    const el = document.getElementById(id);
-    const group = el.closest('.form-group');
-    if (!el.value.trim()) {
-      group.classList.add('has-error');
-      valid = false;
-      missingField = true;
-    } else {
-      group.classList.remove('has-error');
-    }
-  });
-
-  if (missingField) {
-    APP.notify('Mohon lengkapi semua field yang wajib diisi!', 'error');
-  }
-
-  // Step 2: validate dates
-  if (step === 2 && !missingField) {
-    const start = new Date(document.getElementById('tanggalMulai').value);
-    const end = new Date(document.getElementById('tanggalSelesai').value);
-    if (start >= end) {
-      APP.notify('Tanggal selesai harus setelah tanggal mulai!', 'error');
-      valid = false;
-    }
-  }
-  return valid;
-}
-
-function nextStep(from) {
-  if (!validateStep(from)) return;
-  document.getElementById(`step-${from}`).classList.remove('active');
-  document.getElementById(`step-${from + 1}`).classList.add('active');
-  currentStep = from + 1;
-  updateStepIndicators(currentStep);
-  if (from + 1 === 4) updatePreview();
-  window.scrollTo({ top: 200, behavior: 'smooth' });
-}
-
-function prevStep(from) {
-  document.getElementById(`step-${from}`).classList.remove('active');
-  document.getElementById(`step-${from - 1}`).classList.add('active');
-  currentStep = from - 1;
-  updateStepIndicators(currentStep);
-  window.scrollTo({ top: 200, behavior: 'smooth' });
-}
-
-function updatePreview() {
-  const d = collectFormData();
-  const previewEl = document.getElementById('data-preview');
-  previewEl.innerHTML = `
-    <strong>Siswa:</strong> ${d.namaSiswa || '-'}<br>
-    <strong>NIS:</strong> ${d.nis || '-'} | <strong>Kelas:</strong> ${d.kelas || '-'}<br>
-    <strong>Jurusan:</strong> ${d.jurusan || '-'}<br>
-    <strong>Sekolah:</strong> ${d.sekolah || '-'}<br><br>
-    <strong>Perusahaan:</strong> ${d.namaPerusahaan || '-'}<br>
-    <strong>Alamat:</strong> ${d.alamatPerusahaan || '-'}<br>
-    <strong>Pembimbing:</strong> ${d.namaPembimbing || '-'}<br>
-    <strong>Periode:</strong> ${d.tanggalMulai || '-'} s.d. ${d.tanggalSelesai || '-'}
-  `;
-}
-
-function collectFormData() {
-  const n = parseInt(document.getElementById('jumlahMinggu')?.value || 8);
-  const kegiatanMingguan = [];
-  for (let i = 1; i <= n; i++) {
-    const kegiatan = document.getElementById(`week-${i}-kegiatan`)?.value || '';
-    const tanggal = document.getElementById(`week-${i}-date`)?.value || '';
-    if (kegiatan.trim()) kegiatanMingguan.push({ minggu: i, tanggal, kegiatan });
-  }
-  return {
-    namaSiswa: document.getElementById('namaSiswa')?.value || '',
-    nis: document.getElementById('nis')?.value || '',
-    kelas: document.getElementById('kelas')?.value || '',
-    jurusan: document.getElementById('jurusan')?.value || '',
-    sekolah: document.getElementById('sekolah')?.value || '',
-    kota: document.getElementById('kota')?.value || '',
-    namaPerusahaan: document.getElementById('namaPerusahaan')?.value || '',
-    alamatPerusahaan: document.getElementById('alamatPerusahaan')?.value || '',
-    bidangUsaha: document.getElementById('bidangUsaha')?.value || '',
-    namaPembimbing: document.getElementById('namaPembimbing')?.value || '',
-    tanggalMulai: document.getElementById('tanggalMulai')?.value || '',
-    tanggalSelesai: document.getElementById('tanggalSelesai')?.value || '',
-    kendala: document.getElementById('kendala')?.value || '',
-    kesimpulan: document.getElementById('kesimpulan')?.value || '',
-    fotoDiupload: document.getElementById('fotoKegiatan')?.files?.length > 0,
-    template: selectedTemplate,
-    kegiatanMingguan
-  };
+// ==================== PROCEED ====================
+function openPreview() {
+  const data = collectAllData();
+  APP.setFormData(data);
+  APP.storage.set('joki_preview_data', data);
+  window.open('preview.html', '_blank');
 }
 
 function proceedToPayment() {
@@ -657,77 +1527,49 @@ function proceedToPayment() {
     setTimeout(() => openModal('loginModal'), 500);
     return;
   }
-  const data = collectFormData();
+
+  // Validate key fields
+  const data = collectAllData();
+  if (!data.namaSiswa) { APP.notify('Nama siswa belum diisi!', 'error'); goStep(3); return; }
+  if (!data.namaPerusahaan) { APP.notify('Nama perusahaan belum diisi!', 'error'); goStep(4); return; }
+
   APP.setFormData(data);
   APP.setPlan({ id: selectedPlan });
   window.location.href = 'payment.html';
 }
 
+// ==================== INIT ====================
 document.addEventListener('DOMContentLoaded', () => {
-  renderWeekRows();
-  // Pre-select plan chip
-  const chip = document.getElementById(`chip-${selectedPlan}`);
-  if (chip) selectPlan(selectedPlan, chip);
-  updateStepIndicators(1);
-
-  // Hook all inputs to live preview
-  const liveFields = ['namaSiswa','nis','kelas','jurusan','sekolah','kota','namaPerusahaan','alamatPerusahaan'];
-  liveFields.forEach(id => {
-    const el = document.getElementById(id);
-    if (el) el.addEventListener('input', updateLivePreview);
-    if (el) el.addEventListener('change', updateLivePreview);
-  });
-
-  // Init preview
+  APP.setupNavbar();
+  populateSchools();
+  renderStepsNav();
+  loadWizardData();
   updateLivePreview();
-  if (typeof lucide !== 'undefined') lucide.createIcons();
+  updateActivityCount();
+  updateSidebarProgress();
 
-  // ===================== AUTO-SAVE =====================
-  const savedData = localStorage.getItem('joki_autosave');
-  if (savedData) {
-    try {
-      const parsed = JSON.parse(savedData);
-      Object.keys(parsed).forEach(id => {
-        const el = document.getElementById(id);
-        if (el) {
-          el.value = parsed[id];
-          if (id === 'jumlahMinggu') renderWeekRows();
-        }
-      });
-      // Restore dynamic week fields
-      Object.keys(parsed).forEach(id => {
-        if (id.startsWith('week-')) {
-          const el = document.getElementById(id);
-          if (el) el.value = parsed[id];
-        }
-      });
-      updateLivePreview();
-    } catch(e) { console.error('Failed to load auto-save', e); }
+  // URL plan pre-selection
+  const urlPlan = new URLSearchParams(window.location.search).get('plan');
+  if (urlPlan && ['free','pro','premium'].includes(urlPlan)) {
+    selectedPlan = urlPlan;
   }
 
-  // Hook all form inputs to auto-save
-  const allInputs = document.querySelectorAll('.form-input, .form-select, .form-textarea');
-  allInputs.forEach(el => {
-    el.addEventListener('input', saveToLocal);
-    el.addEventListener('change', saveToLocal);
+  // Hook live preview to all inputs
+  const liveIds = ['namaSiswa','nis','kelas','namaPerusahaan','alamatPerusahaan','tanggalMulai','tanggalSelesai','sekolah','kotaSekolah','jurusan'];
+  liveIds.forEach(id => {
+    const el = document.getElementById(id);
+    if (el) {
+      el.addEventListener('input', () => { debouncedPreview(); saveWizardData(); updateSidebarProgress(); });
+      el.addEventListener('change', () => { debouncedPreview(); saveWizardData(); });
+    }
   });
-});
 
-function saveToLocal() {
-  const data = {};
-  const allInputs = document.querySelectorAll('.form-input, .form-select, .form-textarea');
-  allInputs.forEach(el => {
-    if (el.id) data[el.id] = el.value;
-  });
-  localStorage.setItem('joki_autosave', JSON.stringify(data));
-}
+  if (typeof lucide !== 'undefined') lucide.createIcons();
+});
 </script>
 
 <script>
-  if (typeof lucide !== 'undefined') {
-    lucide.createIcons();
-  }
+  if (typeof lucide !== 'undefined') lucide.createIcons();
 </script>
 </body>
-
 </html>

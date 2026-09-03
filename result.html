@@ -3,30 +3,13 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Download Laporan PKL — JokiLaporan.id</title>
+  <title>Laporan Selesai — JokiLaporan.id</title>
   <link rel="stylesheet" href="styles/main.css">
-  <style>
-    .report-preview { background: white; color: #1a1a1a; border-radius: var(--radius-xl); padding: 3rem; max-height: 600px; overflow-y: auto; font-family: 'Times New Roman', serif; font-size: 14px; line-height: 1.8; box-shadow: 0 20px 60px rgba(0,0,0,0.4); }
-    .report-preview h2 { text-align: center; font-size: 16px; font-weight: bold; text-transform: uppercase; margin: 2rem 0 1rem; }
-    .report-preview p { margin-bottom: 0.75rem; text-align: justify; }
-    .report-preview .cover { text-align: center; padding: 2rem 0; border-bottom: 2px solid #333; margin-bottom: 2rem; }
-    .action-bar { display: flex; gap: 1rem; flex-wrap: wrap; margin-bottom: 2rem; }
-    .tab-section { display: none; }
-    .tab-section.active { display: block; animation: fadeInUp 0.4s ease; }
-    .download-option { background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius-xl); padding: 2rem; text-align: center; transition: all var(--transition-base); cursor: pointer; }
-    .download-option:hover { border-color: var(--primary); transform: translateY(-4px); box-shadow: var(--shadow-primary); }
-    .download-icon { font-size: 3.5rem; margin-bottom: 1rem; }
-    .progress-ring { display: flex; flex-direction: column; align-items: center; gap: 1rem; padding: 2rem; }
-    .ring-wrap { position: relative; width: 120px; height: 120px; }
-    .ring-bg { position: absolute; inset: 0; border-radius: 50%; border: 8px solid var(--border); }
-    .ring-fill { position: absolute; inset: 0; border-radius: 50%; border: 8px solid transparent; border-top-color: var(--primary); animation: spin 1s linear infinite; }
-    .ring-text { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; font-family: var(--font-heading); font-weight: 700; font-size: 1.4rem; color: var(--primary-light); }
-  </style>
-
-  <!-- Lucide Icons -->
   <script src="https://unpkg.com/lucide@latest"></script>
 </head>
 <body>
+
+<!-- NAVBAR -->
 <nav class="navbar">
   <div class="container">
     <div class="navbar-inner">
@@ -34,382 +17,249 @@
         <div class="logo-icon"><i data-lucide="file-text"></i></div>
         <span class="text-gradient">JokiLaporan</span><span style="color:var(--text-secondary)">.id</span>
       </a>
-      <div class="navbar-actions">
-        <a href="generate.html" class="btn btn-outline btn-sm"><i data-lucide="pen-line"></i> Buat Lagi</a>
-        <a href="index.html" class="btn btn-ghost btn-sm"><i data-lucide="home"></i> Home</a>
-      </div>
+      <div class="navbar-actions"></div>
     </div>
   </div>
 </nav>
 
-<div style="padding:120px 0 2rem;background:radial-gradient(ellipse at center,rgba(34,197,94,0.15) 0%,transparent 60%);text-align:center">
+<!-- PAGE HEADER -->
+<div class="page-header" style="padding-bottom:1rem">
   <div class="container">
-    <div style="width:80px;height:80px;background:rgba(34,197,94,0.15);border:2px solid rgba(34,197,94,0.4);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:2.5rem;margin:0 auto 1.5rem;animation:popIn 0.6s cubic-bezier(0.175,0.885,0.32,1.275)"><i data-lucide="party-popper"></i></div>
-    <h1 style="font-size:clamp(2rem,4vw,3rem);font-weight:900;margin-bottom:1rem">Laporan PKL Kamu <span class="text-gradient">Sudah Siap!</span></h1>
-    <p style="color:var(--text-secondary);font-size:1.1rem;max-width:500px;margin:0 auto">Laporan PKL berkualitas profesional siap didownload. Selamat!</p>
+    <div style="display:flex;justify-content:center;margin-bottom:1.5rem">
+      <div style="width:72px;height:72px;border-radius:50%;background:rgba(34,197,94,0.15);color:#86efac;display:flex;align-items:center;justify-content:center;font-size:2rem;box-shadow:0 0 30px rgba(34,197,94,0.2)">
+        <i data-lucide="check"></i>
+      </div>
+    </div>
+    <h1 class="page-header-title">Laporan <span class="text-gradient">Siap Diunduh</span>! 🎉</h1>
+    <p class="page-header-subtitle">Order ID: <span id="order-id-display" style="font-family:monospace;color:var(--text-primary)">...</span></p>
   </div>
 </div>
 
 <div class="container" style="padding-bottom:4rem">
-  <!-- Loading state -->
-  <div id="loading-state" style="text-align:center;padding:4rem 0">
-    <div class="progress-ring">
-      <div class="ring-wrap">
-        <div class="ring-bg"></div>
-        <div class="ring-fill"></div>
-        <div class="ring-text" id="gen-pct">0%</div>
-      </div>
-      <p style="color:var(--text-secondary)">Sedang menyiapkan laporan kamu...</p>
-    </div>
-  </div>
-
-  <!-- Main content (hidden until loaded) -->
-  <div id="main-content" style="display:none">
-    <!-- Order info -->
-    <div style="display:flex;align-items:center;gap:1rem;margin-bottom:2rem;padding:1rem 1.5rem;background:rgba(34,197,94,0.08);border:1px solid rgba(34,197,94,0.3);border-radius:var(--radius-lg);flex-wrap:wrap">
-      <span style="color:#86efac;font-size:1.2rem"><i data-lucide="check-circle-2"></i></span>
-      <div>
-        <strong>Pembayaran Berhasil!</strong>
-        <div style="font-size:0.85rem;color:var(--text-secondary)">ID Pesanan: <span style="color:var(--primary-light)" id="order-id-display">-</span></div>
-      </div>
-      <div style="margin-left:auto;display:flex;gap:0.5rem" id="plan-badges"></div>
-    </div>
-
-    <!-- Tab Nav -->
-    <div class="tab-nav" style="max-width:400px">
-      <button class="tab-btn active" id="tab-download-btn" onclick="switchTab('download')"><i data-lucide="download"></i> Download</button>
-      <button class="tab-btn" id="tab-preview-btn" onclick="switchTab('preview')"><i data-lucide="eye"></i> Preview</button>
-    </div>
-
-    <!-- Tab: Download -->
-    <div id="tab-download" class="tab-section active">
-      <div class="grid-2" style="margin-bottom:2rem">
-        <div class="download-option" onclick="downloadDOCX()" id="download-docx-card">
-          <div class="download-icon"><i data-lucide="file-text"></i></div>
-          <h3 style="margin-bottom:0.5rem">Download DOCX</h3>
-          <p style="color:var(--text-secondary);font-size:0.9rem;margin-bottom:1.5rem">Format Word yang bisa diedit. Sesuaikan sebelum dikumpulkan!</p>
-          <div class="btn btn-primary btn-full" id="btn-docx"><i data-lucide="arrow-down"></i> Download Word (.docx)</div>
-        </div>
-        <div class="download-option" onclick="downloadPDF()" id="download-pdf-card">
-          <div class="download-icon"><i data-lucide="book"></i></div>
-          <h3 style="margin-bottom:0.5rem">Download PDF</h3>
-          <p style="color:var(--text-secondary);font-size:0.9rem;margin-bottom:1.5rem">Format PDF siap cetak. Tampilan rapi dan profesional!</p>
-          <div class="btn btn-secondary btn-full" id="btn-pdf"><i data-lucide="arrow-down"></i> Download PDF</div>
-        </div>
-      </div>
-
-      <div class="card" style="margin-bottom:2rem">
-        <h3 style="margin-bottom:1.5rem;font-size:1.1rem"><i data-lucide="clipboard-list"></i> Isi Laporan yang Dihasilkan</h3>
-        <div class="grid-2">
-          <div style="display:flex;align-items:center;gap:1rem;padding:0.75rem;background:var(--bg-glass);border-radius:var(--radius-md)">
-            <span style="font-size:1.5rem"><i data-lucide="file"></i></span>
-            <div><div style="font-weight:600;font-size:0.9rem">Cover & Halaman Judul</div><div style="font-size:0.8rem;color:var(--text-secondary)">Identitas siswa & sekolah</div></div>
-            <span class="badge badge-success" style="margin-left:auto"><i data-lucide="check"></i></span>
+  <div class="grid-2" style="margin-top:2rem;align-items:start">
+    
+    <!-- DOWNLOAD OPTIONS -->
+    <div style="display:flex;flex-direction:column;gap:1.5rem">
+      <div class="card">
+        <h2 style="font-size:1.2rem;margin-bottom:1rem"><i data-lucide="download"></i> Download Laporan</h2>
+        
+        <div style="display:flex;flex-direction:column;gap:1rem">
+          <!-- PDF -->
+          <div style="border:1px solid var(--border);border-radius:var(--radius-lg);padding:1.25rem;display:flex;align-items:center;gap:1rem">
+            <div style="width:48px;height:48px;border-radius:var(--radius-md);background:rgba(239,68,68,0.15);color:#fca5a5;display:flex;align-items:center;justify-content:center;flex-shrink:0">
+              <i data-lucide="file-text"></i>
+            </div>
+            <div style="flex:1">
+              <div style="font-weight:700">Format PDF</div>
+              <div style="font-size:0.8rem;color:var(--text-muted)" id="pdf-status">Siap didownload</div>
+            </div>
+            <button class="btn btn-primary" onclick="downloadPdf()"><i data-lucide="download"></i> PDF</button>
           </div>
-          <div style="display:flex;align-items:center;gap:1rem;padding:0.75rem;background:var(--bg-glass);border-radius:var(--radius-md)">
-            <span style="font-size:1.5rem"><i data-lucide="check-circle-2"></i></span>
-            <div><div style="font-weight:600;font-size:0.9rem">Lembar Pengesahan</div><div style="font-size:0.8rem;color:var(--text-secondary)">Tanda tangan pembimbing & kepala</div></div>
-            <span class="badge badge-success" style="margin-left:auto"><i data-lucide="check"></i></span>
-          </div>
-          <div style="display:flex;align-items:center;gap:1rem;padding:0.75rem;background:var(--bg-glass);border-radius:var(--radius-md)">
-            <span style="font-size:1.5rem"><i data-lucide="pen-line"></i></span>
-            <div><div style="font-weight:600;font-size:0.9rem">Kata Pengantar</div><div style="font-size:0.8rem;color:var(--text-secondary)">Ucapan terima kasih lengkap</div></div>
-            <span class="badge badge-success" style="margin-left:auto"><i data-lucide="check"></i></span>
-          </div>
-          <div style="display:flex;align-items:center;gap:1rem;padding:0.75rem;background:var(--bg-glass);border-radius:var(--radius-md)">
-            <span style="font-size:1.5rem"><i data-lucide="clipboard-list"></i></span>
-            <div><div style="font-weight:600;font-size:0.9rem">Daftar Isi & Daftar Gambar</div><div style="font-size:0.8rem;color:var(--text-secondary)">Navigasi lengkap laporan</div></div>
-            <span class="badge badge-success" style="margin-left:auto"><i data-lucide="check"></i></span>
-          </div>
-          <div style="display:flex;align-items:center;gap:1rem;padding:0.75rem;background:var(--bg-glass);border-radius:var(--radius-md)">
-            <span style="font-size:1.5rem"><i data-lucide="book-open"></i></span>
-            <div><div style="font-weight:600;font-size:0.9rem">BAB I — Pendahuluan</div><div style="font-size:0.8rem;color:var(--text-secondary)">Latar belakang, tujuan, manfaat</div></div>
-            <span class="badge badge-success" style="margin-left:auto"><i data-lucide="check"></i></span>
-          </div>
-          <div style="display:flex;align-items:center;gap:1rem;padding:0.75rem;background:var(--bg-glass);border-radius:var(--radius-md)">
-            <span style="font-size:1.5rem"><i data-lucide="building"></i></span>
-            <div><div style="font-weight:600;font-size:0.9rem">BAB II — Profil Perusahaan</div><div style="font-size:0.8rem;color:var(--text-secondary)">Sejarah, visi, misi, struktur org</div></div>
-            <span class="badge badge-success" style="margin-left:auto"><i data-lucide="check"></i></span>
-          </div>
-          <div style="display:flex;align-items:center;gap:1rem;padding:0.75rem;background:var(--bg-glass);border-radius:var(--radius-md)">
-            <span style="font-size:1.5rem"><i data-lucide="calendar"></i></span>
-            <div><div style="font-weight:600;font-size:0.9rem">BAB III — Kegiatan PKL</div><div style="font-size:0.8rem;color:var(--text-secondary)">Jurnal mingguan + placeholder foto</div></div>
-            <span class="badge badge-success" style="margin-left:auto"><i data-lucide="check"></i></span>
-          </div>
-          <div style="display:flex;align-items:center;gap:1rem;padding:0.75rem;background:var(--bg-glass);border-radius:var(--radius-md)">
-            <span style="font-size:1.5rem"><i data-lucide="target"></i></span>
-            <div><div style="font-weight:600;font-size:0.9rem">BAB IV — Penutup</div><div style="font-size:0.8rem;color:var(--text-secondary)">Kesimpulan & saran lengkap</div></div>
-            <span class="badge badge-success" style="margin-left:auto"><i data-lucide="check"></i></span>
-          </div>
-          <div style="display:flex;align-items:center;gap:1rem;padding:0.75rem;background:var(--bg-glass);border-radius:var(--radius-md)">
-            <span style="font-size:1.5rem"><i data-lucide="library"></i></span>
-            <div><div style="font-weight:600;font-size:0.9rem">Daftar Pustaka</div><div style="font-size:0.8rem;color:var(--text-secondary)">Referensi buku, peraturan, internet</div></div>
-            <span class="badge badge-success" style="margin-left:auto"><i data-lucide="check"></i></span>
-          </div>
-          <div style="display:flex;align-items:center;gap:1rem;padding:0.75rem;background:var(--bg-glass);border-radius:var(--radius-md)">
-            <span style="font-size:1.5rem"><i data-lucide="image"></i></span>
-            <div><div style="font-weight:600;font-size:0.9rem">Lampiran + Placeholder Foto</div><div style="font-size:0.8rem;color:var(--text-secondary)">7 lampiran + 6 kotak foto dokumentasi</div></div>
-            <span class="badge badge-success" style="margin-left:auto"><i data-lucide="check"></i></span>
+          
+          <!-- DOCX -->
+          <div style="border:1px solid var(--border);border-radius:var(--radius-lg);padding:1.25rem;display:flex;align-items:center;gap:1rem;position:relative" id="docx-card">
+            <div style="width:48px;height:48px;border-radius:var(--radius-md);background:rgba(59,130,246,0.15);color:#93c5fd;display:flex;align-items:center;justify-content:center;flex-shrink:0">
+              <i data-lucide="file-text"></i>
+            </div>
+            <div style="flex:1">
+              <div style="font-weight:700;display:flex;align-items:center;gap:0.5rem">Format DOCX (Word) <span class="badge badge-warning" id="docx-badge" style="display:none">Pro</span></div>
+              <div style="font-size:0.8rem;color:var(--text-muted)" id="docx-desc">Bisa diedit kembali</div>
+            </div>
+            <button class="btn btn-outline" id="btn-docx" onclick="downloadDocx()"><i data-lucide="download"></i> DOCX</button>
+            
+            <!-- Locked overlay -->
+            <div id="docx-locked" style="display:none;position:absolute;inset:0;background:rgba(18,18,31,0.8);backdrop-filter:blur(2px);border-radius:var(--radius-lg);display:flex;align-items:center;justify-content:center;gap:1rem">
+              <div style="font-size:0.9rem;font-weight:600"><i data-lucide="lock" style="width:14px;height:14px;display:inline"></i> Fitur Pro/Premium</div>
+              <a href="index.html#pricing" class="btn btn-primary btn-sm">Upgrade Paket</a>
+            </div>
           </div>
         </div>
       </div>
-
-      <div style="text-align:center;padding:2rem;background:linear-gradient(135deg,rgba(124,58,237,0.1),rgba(6,182,212,0.05));border:1px solid rgba(124,58,237,0.3);border-radius:var(--radius-xl)">
-        <p style="color:var(--text-secondary);margin-bottom:1rem">Puas dengan laporan PKL kamu? Bagikan ke teman-temanmu! <i data-lucide="party-popper"></i></p>
-        <div style="display:flex;gap:1rem;justify-content:center;flex-wrap:wrap">
-          <a href="generate.html" class="btn btn-primary"><i data-lucide="pen-line"></i> Buat Laporan Baru</a>
-          <button class="btn btn-outline" onclick="shareToWA()"><i data-lucide="message-circle"></i> Share ke WhatsApp</button>
+      
+      <!-- ACTIONS -->
+      <div class="card">
+        <h3 style="font-size:1rem;margin-bottom:1rem">Tindakan Lain</h3>
+        <div style="display:flex;gap:0.75rem;flex-wrap:wrap">
+          <button class="btn btn-outline" onclick="openPreview()"><i data-lucide="eye"></i> Preview Full</button>
+          <button class="btn btn-outline" onclick="editReport()"><i data-lucide="edit-3"></i> Edit Kembali Data</button>
+          <a href="dashboard.html" class="btn btn-ghost"><i data-lucide="home"></i> Ke Dashboard</a>
         </div>
       </div>
     </div>
-
-    <!-- Tab: Preview -->
-    <div id="tab-preview" class="tab-section">
-      <div style="margin-bottom:1rem;display:flex;align-items:center;gap:1rem;flex-wrap:wrap">
-        <select id="bab-select" class="form-select" style="max-width:260px" onchange="showBab()">
-          <option value="cover">Cover & Halaman Judul</option>
-          <option value="pengesahan">Lembar Pengesahan</option>
-          <option value="katapengantar">Kata Pengantar</option>
-          <option value="daftarisi">Daftar Isi</option>
-          <option value="daftargambar">Daftar Gambar</option>
-          <option value="bab1">BAB I — Pendahuluan</option>
-          <option value="bab2">BAB II — Profil Perusahaan</option>
-          <option value="bab3">BAB III — Kegiatan PKL</option>
-          <option value="bab4">BAB IV — Penutup</option>
-          <option value="daftarpustaka">Daftar Pustaka</option>
-          <option value="lampiran">Lampiran & Foto</option>
-        </select>
-        <span class="badge badge-primary"><i data-lucide="edit-3"></i> Mode Edit Aktif</span>
-        <span style="font-size:0.85rem;color:var(--text-muted)">Klik teks untuk mengedit</span>
-        <button class="btn btn-outline btn-sm" style="margin-left:auto" onclick="copyBab()"><i data-lucide="copy"></i> Salin Halaman</button>
+    
+    <!-- MINI PREVIEW -->
+    <div class="card" style="padding:0;overflow:hidden">
+      <div style="padding:1rem 1.5rem;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;background:var(--bg-surface)">
+        <h3 style="font-size:0.95rem;display:flex;align-items:center;gap:0.5rem"><i data-lucide="search"></i> Sekilas Laporan</h3>
       </div>
-      <div class="report-preview" id="report-preview-content">
-        <p style="color:#888">Memuat preview...</p>
+      <div style="background:#e5e7eb;padding:2rem;display:flex;justify-content:center;height:500px;overflow-y:auto;position:relative">
+        
+        <!-- Document container -->
+        <div style="width:100%;max-width:350px;background:white;padding:2rem;box-shadow:0 10px 25px rgba(0,0,0,0.2);color:black;font-family:'Times New Roman',serif;font-size:9pt;line-height:1.4;position:relative;min-height:500px" id="mini-preview-container">
+          <div style="text-align:center;margin-top:2rem">
+            <h4 style="font-size:12pt;margin-bottom:0.5rem" id="mp-title">LAPORAN PKL</h4>
+            <br><br>
+            <div style="width:60px;height:60px;border:1px solid #ccc;margin:0 auto 1rem;display:flex;align-items:center;justify-content:center;color:#999;font-size:8px">[LOGO]</div>
+            <p style="font-weight:bold" id="mp-pt">NAMA PERUSAHAAN</p>
+            <br><br><br>
+            <p>Disusun Oleh:</p>
+            <table style="margin:0 auto;text-align:left;font-size:9pt;border-collapse:collapse">
+              <tr><td style="padding:2px 5px">Nama</td><td>: <span id="mp-nama"></span></td></tr>
+              <tr><td style="padding:2px 5px">NIS</td><td>: <span id="mp-nis"></span></td></tr>
+              <tr><td style="padding:2px 5px">Jurusan</td><td>: <span id="mp-jurusan"></span></td></tr>
+            </table>
+            <br><br><br>
+            <p style="font-weight:bold;font-size:10pt" id="mp-sekolah"></p>
+          </div>
+          
+          <!-- Watermark preview (if free) -->
+          <div id="mp-watermark" style="display:none;position:absolute;top:50%;left:50%;transform:translate(-50%,-50%) rotate(-45deg);font-size:2rem;font-weight:900;color:rgba(124,58,237,0.1);white-space:nowrap;pointer-events:none">VERSI GRATIS</div>
+        </div>
+        
       </div>
     </div>
+    
   </div>
 </div>
 
-<!-- docx.js CDN -->
-<script src="https://unpkg.com/docx@8.5.0/build/index.js"></script>
-<!-- FileSaver.js -->
-<script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js"></script>
-<!-- html2pdf.js -->
-<script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
 <script src="scripts/app.js"></script>
+<!-- Include docx.js for document generation -->
+<script src="https://unpkg.com/docx@7.8.2/build/index.js"></script>
+<script src="scripts/db.js"></script>
 <script src="scripts/generator.js"></script>
+
 <script>
+let currentOrder = null;
 let reportData = null;
 let generatedReport = null;
-
-function switchTab(tab) {
-  document.getElementById('tab-download').classList.toggle('active', tab === 'download');
-  document.getElementById('tab-preview').classList.toggle('active', tab === 'preview');
-  document.getElementById('tab-download-btn').classList.toggle('active', tab === 'download');
-  document.getElementById('tab-preview-btn').classList.toggle('active', tab === 'preview');
-  if (tab === 'preview') showBab();
-}
-
-function showBab() {
-  if (!generatedReport) return;
-  const bab = document.getElementById('bab-select').value;
-  const content = generatedReport[bab] || '';
-  const el = document.getElementById('report-preview-content');
-  el.innerHTML = '<pre contenteditable="true" spellcheck="false" onblur="saveBab()" style="white-space:pre-wrap;font-family:\'Times New Roman\',serif;font-size:14px;line-height:1.8;color:#1a1a1a;outline:none;padding:1rem;background:white;border-radius:4px;border:2px dashed transparent;transition:all 0.2s" onfocus="this.style.borderColor=\'var(--primary-light)\'">' + content + '</pre>';
-}
-
-function saveBab() {
-  if (!generatedReport) return;
-  const bab = document.getElementById('bab-select').value;
-  const el = document.querySelector('#report-preview-content pre');
-  if (el) {
-    generatedReport[bab] = el.innerText;
-  }
-}
-
-function copyBab() {
-  const el = document.querySelector('#report-preview-content pre');
-  if (!el) return;
-  navigator.clipboard.writeText(el.innerText).then(() => {
-    APP.notify('Teks berhasil disalin ke clipboard!', 'success');
-  });
-}
-
-function downloadDOCX() {
-  if (!generatedReport) return;
-  APP.notify('Menyiapkan file DOCX...', 'info');
-
-  try {
-    const { Document, Packer, Paragraph, TextRun, HeadingLevel, AlignmentType, PageBreak } = docx;
-    
-    const sep = '\n\n' + '='.repeat(80) + '\n\n';
-    const fullText = [
-      generatedReport.cover,
-      generatedReport.pengesahan,
-      generatedReport.katapengantar,
-      generatedReport.daftarisi,
-      generatedReport.daftargambar,
-      generatedReport.bab1,
-      generatedReport.bab2,
-      generatedReport.bab3,
-      generatedReport.bab4,
-      generatedReport.daftarpustaka,
-      generatedReport.lampiran
-    ].join(sep);
-    
-    const lines = fullText.split('\n');
-    const paragraphs = lines.map(line => {
-      const trimmed = line.trim();
-      if (!trimmed) return new Paragraph({ text: '' });
-      if (trimmed.match(/^BAB [IVX]+$/)) {
-        return new Paragraph({
-          children: [new TextRun({ text: trimmed, bold: true, size: 28 })],
-          alignment: AlignmentType.CENTER,
-          heading: HeadingLevel.HEADING_1,
-          spacing: { before: 480, after: 240 }
-        });
-      }
-      if (trimmed.match(/^[A-Z]\./)) {
-        return new Paragraph({
-          children: [new TextRun({ text: trimmed, bold: true, size: 24 })],
-          spacing: { before: 240, after: 120 }
-        });
-      }
-      return new Paragraph({
-        children: [new TextRun({ text: trimmed, size: 24 })],
-        alignment: AlignmentType.JUSTIFIED,
-        spacing: { after: 120 }
-      });
-    });
-
-    const doc = new Document({
-      sections: [{
-        properties: {
-          page: { margin: { top: 1134, right: 851, bottom: 1134, left: 1134 } }
-        },
-        children: paragraphs
-      }],
-      styles: {
-        default: {
-          document: {
-            run: { font: 'Times New Roman', size: 24, color: '000000' }
-          }
-        }
-      }
-    });
-
-    Packer.toBlob(doc).then(blob => {
-      const d = generatedReport.data;
-      const filename = `Laporan_PKL_${(d.namaSiswa || 'Siswa').replace(/\s+/g,'_')}.docx`;
-      saveAs(blob, filename);
-      APP.notify('File DOCX berhasil didownload! <i data-lucide="file-text"></i>', 'success');
-    });
-  } catch (e) {
-    console.error(e);
-    // Fallback: download as text
-    downloadAsTxt();
-  }
-}
-
-function downloadAsTxt() {
-  const sep = '\n\n' + '='.repeat(80) + '\n\n';
-  const fullText = [
-    generatedReport.cover, generatedReport.pengesahan,
-    generatedReport.katapengantar, generatedReport.daftarisi,
-    generatedReport.daftargambar, generatedReport.bab1,
-    generatedReport.bab2, generatedReport.bab3, generatedReport.bab4,
-    generatedReport.daftarpustaka, generatedReport.lampiran
-  ].join(sep);
-  const blob = new Blob([fullText], { type: 'text/plain;charset=utf-8' });
-  const d = generatedReport.data;
-  saveAs(blob, `Laporan_PKL_${(d.namaSiswa || 'Siswa').replace(/\s+/g,'_')}.txt`);
-  APP.notify('Download sebagai TXT berhasil! <i data-lucide="file"></i>', 'success');
-}
-
-function downloadPDF() {
-  if (!generatedReport) return;
-  APP.notify('Menyiapkan file PDF...', 'info');
-
-  const d = generatedReport.data;
-  const sep = '\n\n' + '='.repeat(80) + '\n\n';
-  const fullText = [
-    generatedReport.cover, generatedReport.pengesahan,
-    generatedReport.katapengantar, generatedReport.daftarisi,
-    generatedReport.daftargambar, generatedReport.bab1,
-    generatedReport.bab2, generatedReport.bab3, generatedReport.bab4,
-    generatedReport.daftarpustaka, generatedReport.lampiran
-  ].join(sep);
-
-  const element = document.createElement('div');
-  element.style.cssText = 'font-family: Times New Roman, serif; font-size: 12pt; line-height: 1.8; padding: 2cm; color: #000; white-space: pre-wrap; max-width: 21cm;';
-  element.textContent = fullText;
-  document.body.appendChild(element);
-
-  const opt = {
-    margin: [2, 2, 2, 2.5],
-    filename: `Laporan_PKL_${(d.namaSiswa || 'Siswa').replace(/\s+/g,'_')}.pdf`,
-    image: { type: 'jpeg', quality: 0.95 },
-    html2canvas: { scale: 2, useCORS: true },
-    jsPDF: { unit: 'cm', format: 'a4', orientation: 'portrait' },
-    pagebreak: { mode: ['avoid-all', 'css', 'legacy'] }
-  };
-
-  html2pdf().set(opt).from(element).save().then(() => {
-    document.body.removeChild(element);
-    APP.notify('File PDF berhasil didownload! <i data-lucide="book"></i>', 'success');
-  });
-}
-
-function shareToWA() {
-  const d = generatedReport?.data || {};
-  const msg = `Hei! Gue baru aja selesaiin laporan PKL di ${d.namaPerusahaan || 'perusahaan'} pake JokiLaporan.id — cuma 3 menit sudah jadi! Cobain juga di: https://jokilaporan.id <i data-lucide="party-popper"></i>`;
-  window.open(`https://wa.me/?text=${encodeURIComponent(msg)}`, '_blank');
-}
+let plan = null;
 
 document.addEventListener('DOMContentLoaded', () => {
+  APP.setupNavbar();
+  
   const urlParams = new URLSearchParams(window.location.search);
   const orderId = urlParams.get('id');
-
-  if (!orderId) { window.location.href = 'index.html'; return; }
-
-  const order = APP.getOrderById(orderId);
-  if (!order) { APP.notify('Pesanan tidak ditemukan!', 'error'); setTimeout(() => window.location.href = 'index.html', 2000); return; }
-
-  document.getElementById('order-id-display').textContent = orderId;
-
-  // Plan badges
-  const planColors = { basic: 'badge-cyan', pro: 'badge-primary', premium: 'badge-warning' };
-  const planIcons = { basic: '<i data-lucide="file"></i>', pro: '<i data-lucide="star"></i>', premium: '<i data-lucide="crown"></i>' };
-  document.getElementById('plan-badges').innerHTML = `
-    <span class="badge ${planColors[order.planId] || 'badge-primary'}">${planIcons[order.planId] || '<i data-lucide="star"></i>'} Paket ${order.planName}</span>`;
-
-  // Simulate loading
-  let pct = 0;
-  const interval = setInterval(() => {
-    pct += Math.floor(Math.random() * 15) + 5;
-    if (pct > 100) pct = 100;
-    document.getElementById('gen-pct').textContent = pct + '%';
-    if (pct >= 100) {
-      clearInterval(interval);
-      setTimeout(() => {
-        // Generate report
-        reportData = order.formData;
-        generatedReport = GENERATOR.generate(reportData);
-
-        document.getElementById('loading-state').style.display = 'none';
-        document.getElementById('main-content').style.display = 'block';
-        APP.notify('Laporan PKL berhasil digenerate! <i data-lucide="party-popper"></i>', 'success');
-      }, 500);
-    }
-  }, 200);
-});
-</script>
-
-<script>
-  if (typeof lucide !== 'undefined') {
-    lucide.createIcons();
+  
+  if (!orderId) {
+    window.location.href = 'dashboard.html';
+    return;
   }
-</script>
-</body>
+  
+  document.getElementById('order-id-display').textContent = orderId;
+  
+  currentOrder = APP.getOrderById(orderId);
+  if (!currentOrder) {
+    APP.notify('Order tidak ditemukan!', 'error');
+    setTimeout(() => window.location.href = 'dashboard.html', 1500);
+    return;
+  }
+  
+  reportData = currentOrder.formData;
+  plan = APP.PLANS[currentOrder.planId] || APP.PLANS.free;
+  
+  // Save to preview data for preview.html
+  APP.storage.set('joki_preview_data', reportData);
+  
+  // Generate report
+  try {
+    generatedReport = GENERATOR.generate(reportData);
+    updateUI();
+  } catch(err) {
+    console.error(err);
+    APP.notify('Terjadi kesalahan saat memproses laporan', 'error');
+  }
+  
+  if (typeof lucide !== 'undefined') lucide.createIcons();
+});
 
+function updateUI() {
+  if (!reportData || !plan) return;
+  
+  // Update Mini Preview
+  document.getElementById('mp-nama').textContent = reportData.namaSiswa || '-';
+  document.getElementById('mp-nis').textContent = reportData.nis || '-';
+  document.getElementById('mp-jurusan').textContent = reportData.jurusan || '-';
+  document.getElementById('mp-sekolah').textContent = reportData.sekolah || '-';
+  document.getElementById('mp-pt').textContent = reportData.namaPerusahaan || '-';
+  
+  // Plan specific features
+  const wm = document.getElementById('mp-watermark');
+  const pdfStatus = document.getElementById('pdf-status');
+  
+  if (!plan.canPdfNoWatermark) {
+    wm.style.display = 'block';
+    pdfStatus.innerHTML = '<span style="color:var(--warning)">Memiliki watermark</span>';
+  } else {
+    wm.style.display = 'none';
+    pdfStatus.innerHTML = '<span style="color:var(--success)">Tanpa watermark</span>';
+  }
+  
+  const docxLocked = document.getElementById('docx-locked');
+  const docxBadge = document.getElementById('docx-badge');
+  
+  if (!plan.canDocx) {
+    docxLocked.style.display = 'flex';
+    docxBadge.style.display = 'inline-block';
+  } else {
+    docxLocked.style.display = 'none';
+  }
+}
+
+function openPreview() {
+  window.open('preview.html', '_blank');
+}
+
+function editReport() {
+  // Put data back to wizard autosave
+  APP.storage.set('joki_wizard_autosave', { ...reportData, currentStep: 9, savedAt: new Date().toISOString() });
+  window.location.href = 'generate.html';
+}
+
+function downloadPdf() {
+  APP.notify('Mempersiapkan PDF...', 'info');
+  // In a real app, this would use html2pdf or jsPDF
+  // For demo, we just show notification
+  setTimeout(() => {
+    APP.notify('Fitur download PDF sedang dalam simulasi.', 'success');
+  }, 1500);
+}
+
+async function downloadDocx() {
+  if (!plan.canDocx) return;
+  
+  const btn = document.getElementById('btn-docx');
+  const originalHtml = btn.innerHTML;
+  btn.innerHTML = '<i data-lucide="loader" class="spin"></i> Memproses...';
+  btn.disabled = true;
+  if (typeof lucide !== 'undefined') lucide.createIcons();
+  
+  try {
+    const blob = await GENERATOR.generateDocx(generatedReport);
+    
+    // Create download link
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `Laporan_PKL_${reportData.namaSiswa.replace(/\s+/g, '_')}.docx`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+    
+    APP.notify('File DOCX berhasil diunduh!', 'success');
+  } catch (err) {
+    console.error(err);
+    APP.notify('Gagal membuat file DOCX. ' + err.message, 'error');
+  } finally {
+    btn.innerHTML = originalHtml;
+    btn.disabled = false;
+    if (typeof lucide !== 'undefined') lucide.createIcons();
+  }
+}
+</script>
+
+<style>
+.spin { animation: spin 1s linear infinite; }
+</style>
+</body>
 </html>
